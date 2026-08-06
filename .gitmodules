@@ -1,0 +1,3 @@
+[submodule "fatfs_lib"]
+	path = fatfs_lib
+	url = https://github.com/carlk3/no-OS-FatFS-SD-SPI-RPi-Pico.git

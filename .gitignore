@@ -1,0 +1,8 @@
+build/
+build_doom/
+*.uf2
+*.elf
+*.bin
+_deps/
+.DS_Store
+Thumbs.db
