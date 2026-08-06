@@ -4,6 +4,7 @@
 #include "hardware/watchdog.h"
 #include "hardware/clocks.h"
 #include "hardware/spi.h"
+#include "pico/time.h"
 #include <string.h>
 
 settings_t g_settings;
@@ -15,6 +16,7 @@ static int pending_arg = 0;
 
 static bool last_sw = false;
 static uint32_t nav_time = 0;
+static uint32_t last_tick_ms = 0; // <-- Добавлено для расчёта delta_ms
 
 bool core_set_cpu_mhz(uint16_t mhz) {
     if (!set_sys_clock_khz((uint32_t)mhz * 1000, true)) return false;
@@ -77,6 +79,9 @@ void core_start(app_id_t initial) {
     cur = initial;
     pending = APP_COUNT;
     apps[cur]->on_enter(0);
+    
+    // Инициализируем таймер перед циклом
+    last_tick_ms = to_ms_since_boot(get_absolute_time());
 
     while (true) {
         core_input_t in;
@@ -106,7 +111,14 @@ void core_start(app_id_t initial) {
             }
         }
 
-        apps[cur]->on_tick(&in);
+        // <-- РАСЧЁТ DELTA_MS
+        uint32_t now_ms = to_ms_since_boot(get_absolute_time());
+        uint32_t delta_ms = (last_tick_ms == 0) ? 16 : (now_ms - last_tick_ms);
+        if (delta_ms > 100) delta_ms = 100; // Защита от гигантских скачков при лагах
+        last_tick_ms = now_ms;
+
+        // <-- ПЕРЕДАЧА DELTA_MS В ПРИЛОЖЕНИЕ
+        apps[cur]->on_tick(&in, delta_ms);
         sleep_ms(10);
     }
 }

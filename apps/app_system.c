@@ -14,7 +14,7 @@ static void menu_enter(int arg) {
     ui_draw_start_menu(menu_sel);
 }
 
-static void menu_tick(const core_input_t *in) {
+static void menu_tick(const core_input_t *in, uint32_t delta_ms) {
     if (in->nav_up) {
         menu_sel = (menu_sel + UI_MENU_ITEMS - 1) % UI_MENU_ITEMS;
         buzzer_click();
@@ -54,7 +54,7 @@ static void about_enter(int arg) {
     ui_draw_about_window();
 }
 
-static void about_tick(const core_input_t *in) {
+static void about_tick(const core_input_t *in, uint32_t delta_ms) {
     if (in->ok_pressed || in->back_pressed) {
         buzzer_click();
         core_open(APP_DESKTOP, 0);

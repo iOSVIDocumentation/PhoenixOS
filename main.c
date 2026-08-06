@@ -75,6 +75,7 @@ int main(void) {
     core_register(APP_WALLPAPER, &app_wallpaper);
     core_register(APP_CPU,       &app_cpu);
     core_register(APP_MEDIA,     &app_media);
+    core_register(APP_WOLF3D,    &app_wolf3d);
 
     core_start(APP_DESKTOP);
     return 0;

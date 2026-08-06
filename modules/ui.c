@@ -385,7 +385,7 @@ void ui_draw_about_window(void) {
     st7789_draw_string(x + 6, y + 6, "About PhoenixOS", COLOR_WHITE, TITLE_BLUE, 1);
 
     int ty = y + 24;
-    st7789_draw_string(x + 8, ty, "PhoenixOS v0.7 Kernel", COLOR_BLACK, WIN_GRAY_BASE, 1);
+    st7789_draw_string(x + 8, ty, "PhoenixOS v0.9 Kernel", COLOR_BLACK, WIN_GRAY_BASE, 1);
     st7789_draw_string(x + 8, ty + 12, "MCU: RP2350 M33 x2", COLOR_BLACK, WIN_GRAY_BASE, 1);
     {
         char clk[24];

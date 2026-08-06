@@ -33,7 +33,7 @@ static void files_enter(int arg) {
     ui_draw_files_window(&fm, fm_sel, fm_scroll);
 }
 
-static void files_tick(const core_input_t *in) {
+static void files_tick(const core_input_t *in, uint32_t delta_ms) {
     int old_sel = fm_sel;
     int old_scroll = fm_scroll;
     bool full = false;

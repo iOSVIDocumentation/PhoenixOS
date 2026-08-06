@@ -261,7 +261,7 @@ static void media_exit(void) {
     media_stop();
 }
 
-static void media_tick(const core_input_t *in) {
+static void media_tick(const core_input_t *in, uint32_t delta_ms) {
     if (!playing) {
         int old_sel = mv_sel;
         int old_scroll = mv_scroll;

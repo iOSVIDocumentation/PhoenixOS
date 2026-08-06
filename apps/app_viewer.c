@@ -11,7 +11,7 @@ static void viewer_enter(int arg) {
     viewer_draw(view_scroll);
 }
 
-static void viewer_tick(const core_input_t *in) {
+static void viewer_tick(const core_input_t *in, uint32_t delta_ms) {
     bool need_redraw = false;
 
     int max_scroll = viewer_get_lines() - VIEWER_VISIBLE;

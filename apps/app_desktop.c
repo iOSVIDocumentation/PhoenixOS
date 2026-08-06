@@ -13,7 +13,7 @@ static void desktop_enter(int arg) {
     ui_draw_cursor(cursor_x, cursor_y);
 }
 
-static void desktop_tick(const core_input_t *in) {
+static void desktop_tick(const core_input_t *in, uint32_t delta_ms) {
     int speed = g_settings.cursor_speed;
 
     int new_x = cursor_x + in->dx * speed;
@@ -50,7 +50,7 @@ static void desktop_tick(const core_input_t *in) {
             core_open(APP_MEDIA, 0);
         } else if (last_hover != -1) {
             buzzer_click();
-            /* Games: ЭТАП 7 */
+            core_open(APP_WOLF3D, 0);
         }
     }
 }

@@ -43,7 +43,7 @@ static void settings_enter(int arg) {
     ui_draw_settings_window(set_sel, &g_settings);
 }
 
-static void settings_tick(const core_input_t *in) {
+static void settings_tick(const core_input_t *in, uint32_t delta_ms) {
     int old_sel = set_sel;
 
     if (in->nav_up && set_sel > 0) {
@@ -106,7 +106,7 @@ static void wp_enter(int arg) {
     ui_draw_wallpaper_picker(wp_sel, wp_scroll, g_settings.wallpaper);
 }
 
-static void wp_tick(const core_input_t *in) {
+static void wp_tick(const core_input_t *in, uint32_t delta_ms) {
     int old_sel = wp_sel;
     int old_scroll = wp_scroll;
     bool applied = false;
@@ -169,7 +169,7 @@ static void cpu_enter(int arg) {
     ui_draw_cpu_menu(cpu_sel, g_settings.cpu_mhz);
 }
 
-static void cpu_tick(const core_input_t *in) {
+static void cpu_tick(const core_input_t *in, uint32_t delta_ms) {
     int old_sel = cpu_sel;
     bool applied = false;
 
