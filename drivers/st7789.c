@@ -83,7 +83,7 @@ static void lcd_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {
 
 void st7789_set_backlight(uint8_t percent) {
     if (percent > 100) percent = 100;
-    uint16_t duty = (percent * 255) / 100;
+    uint16_t duty = (percent * 10000) / 100;
     pwm_set_gpio_level(PIN_LCD_BLK, duty);
 }
 
@@ -108,7 +108,8 @@ void st7789_init(void) {
     gpio_set_function(PIN_LCD_BLK, GPIO_FUNC_PWM);
     pwm_slice_num = pwm_gpio_to_slice_num(PIN_LCD_BLK);
     pwm_config cfg = pwm_get_default_config();
-    pwm_config_set_wrap(&cfg, 255);
+    pwm_config_set_wrap(&cfg, 10000);
+    pwm_config_set_clkdiv(&cfg, 1.0f);
     pwm_init(pwm_slice_num, &cfg, true);
     st7789_set_backlight(0);
 
@@ -133,7 +134,6 @@ void st7789_init(void) {
 
 void st7789_fill(uint16_t color) { st7789_fill_rect(0, 0, LCD_WIDTH, LCD_HEIGHT, color); }
 
-/* БЫСТРАЯ версия: одна SPI-транзакция на строку */
 void st7789_fill_rect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) {
     if ((x >= LCD_WIDTH) || (y >= LCD_HEIGHT)) return;
     if ((x + w - 1) >= LCD_WIDTH) w = LCD_WIDTH - x;
@@ -192,7 +192,6 @@ void st7789_draw_string(int16_t x, int16_t y, const char *str, uint16_t color, u
     }
 }
 
-/* Быстрая строка: 8 SPI-транзакций на всю строку */
 static uint8_t fast_buf[LCD_WIDTH * 2];
 
 void st7789_draw_string_fast(int16_t x, int16_t y, const char *str, uint16_t color, uint16_t bg, uint8_t max_chars) {
@@ -236,7 +235,6 @@ void st7789_draw_string_fast(int16_t x, int16_t y, const char *str, uint16_t col
     }
 }
 
-/* Запись готовой строки пикселей (RGB565, big-endian) */
 void st7789_write_row(int16_t x, int16_t y, int16_t w, const uint8_t *buf) {
     if (x < 0 || y < 0 || w <= 0 || y >= LCD_HEIGHT) return;
     if (x + w > LCD_WIDTH) w = LCD_WIDTH - x;
@@ -252,6 +250,7 @@ uint8_t st7789_font_row(char ch, uint8_t row) {
     if (row > 7) return 0;
     return font8x8_basic[(uint8_t)(ch - 32)][row];
 }
+
 void st7789_display_on(void) {
     lcd_write_cmd(0x11);
     sleep_ms(10);

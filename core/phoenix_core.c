@@ -5,18 +5,22 @@
 #include "hardware/clocks.h"
 #include "hardware/spi.h"
 #include "pico/time.h"
+#include "fs_mutex.h"
 #include <string.h>
 
 settings_t g_settings;
 
-static const phoenix_app_t *apps[APP_COUNT];
+static const phoenix_app_t *apps[CORE_MAX_APPS];
 static app_id_t cur = APP_DESKTOP;
-static app_id_t pending = APP_COUNT;
+static app_id_t pending = APP_INVALID;
 static int pending_arg = 0;
 
 static bool last_sw = false;
 static uint32_t nav_time = 0;
-static uint32_t last_tick_ms = 0; // <-- Добавлено для расчёта delta_ms
+static uint32_t last_tick_ms = 0;
+
+/* Если цикл ядра зависнет дольше этого — автоматическая перезагрузка */
+#define WATCHDOG_TIMEOUT_MS 1500
 
 bool core_set_cpu_mhz(uint16_t mhz) {
     if (!set_sys_clock_khz((uint32_t)mhz * 1000, true)) return false;
@@ -26,7 +30,18 @@ bool core_set_cpu_mhz(uint16_t mhz) {
 }
 
 static uint32_t thermal_time = 0;
+static uint32_t last_hb = 0;
+static uint8_t hb_bad = 0;
 static void thermal_guard(void) {
+    /* жив ли core1? 3 секунды без heartbeat = перезагрузка */
+    uint32_t hb = g_core1_heartbeat;
+    if (hb == last_hb) {
+        if (++hb_bad >= 3) watchdog_reboot(0, 0, 0);
+    } else {
+        hb_bad = 0;
+    }
+    last_hb = hb;
+
     uint32_t now = to_ms_since_boot(get_absolute_time());
     if (now - thermal_time < 1000) return;
     thermal_time = now;
@@ -42,10 +57,33 @@ static void thermal_guard(void) {
 }
 
 void core_register(app_id_t id, const phoenix_app_t *app) {
+    if ((int)id < 0 || (int)id >= CORE_MAX_APPS || app == NULL) return;
     apps[id] = app;
 }
 
+app_id_t core_register_dyn(const phoenix_app_t *app) {
+    if (app == NULL) return APP_INVALID;
+    for (int i = (int)APP_INVALID; i < CORE_MAX_APPS; i++) {
+        if (apps[i] == NULL) {
+            apps[i] = app;
+            return (app_id_t)i;
+        }
+    }
+    return APP_INVALID; /* нет мест */
+}
+
+app_id_t core_find(const char *name) {
+    if (name == NULL) return APP_INVALID;
+    for (int i = 0; i < CORE_MAX_APPS; i++) {
+        if (apps[i] && apps[i]->name && strcmp(apps[i]->name, name) == 0) {
+            return (app_id_t)i;
+        }
+    }
+    return APP_INVALID;
+}
+
 void core_open(app_id_t id, int arg) {
+    if ((int)id < 0 || (int)id >= CORE_MAX_APPS || apps[id] == NULL) return;
     pending = id;
     pending_arg = arg;
 }
@@ -76,14 +114,24 @@ static void core_poll_input(core_input_t *in) {
 
 void core_start(app_id_t initial) {
     adc_set_temp_sensor_enabled(true);
+    fs_mutex_init();
+
+    /* Аппаратный сторож: завис ядра = перезагрузка */
+    watchdog_enable(WATCHDOG_TIMEOUT_MS, true);
+
+    if ((int)initial < 0 || (int)initial >= CORE_MAX_APPS || apps[initial] == NULL) {
+        watchdog_reboot(0, 0, 0); /* нет рабочего стола — фатал */
+    }
+
     cur = initial;
-    pending = APP_COUNT;
+    pending = APP_INVALID;
     apps[cur]->on_enter(0);
-    
-    // Инициализируем таймер перед циклом
+
     last_tick_ms = to_ms_since_boot(get_absolute_time());
 
     while (true) {
+        watchdog_update(); /* кормим сторожа каждый виток */
+
         core_input_t in;
         core_poll_input(&in);
         thermal_guard();
@@ -95,10 +143,10 @@ void core_start(app_id_t initial) {
             consumed = true;
         }
 
-        if (pending != APP_COUNT) {
+        if (pending != APP_INVALID && apps[pending] != NULL) {
             if (apps[cur]->on_exit) apps[cur]->on_exit();
             cur = pending;
-            pending = APP_COUNT;
+            pending = APP_INVALID;
             int arg = pending_arg;
             pending_arg = 0;
             apps[cur]->on_enter(arg);
@@ -109,15 +157,15 @@ void core_start(app_id_t initial) {
                 in.sw_pressed = false;
                 in.nav_up = in.nav_down = in.nav_left = in.nav_right = false;
             }
+        } else {
+            pending = APP_INVALID; /* кривой id — игнорируем, не падаем */
         }
 
-        // <-- РАСЧЁТ DELTA_MS
         uint32_t now_ms = to_ms_since_boot(get_absolute_time());
         uint32_t delta_ms = (last_tick_ms == 0) ? 16 : (now_ms - last_tick_ms);
-        if (delta_ms > 100) delta_ms = 100; // Защита от гигантских скачков при лагах
+        if (delta_ms > 100) delta_ms = 100;
         last_tick_ms = now_ms;
 
-        // <-- ПЕРЕДАЧА DELTA_MS В ПРИЛОЖЕНИЕ
         apps[cur]->on_tick(&in, delta_ms);
         sleep_ms(10);
     }

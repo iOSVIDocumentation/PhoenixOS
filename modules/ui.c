@@ -337,6 +337,7 @@ void ui_draw_desktop(void) {
 /* ---------- Меню "Пуск" ---------- */
 
 static const char *menu_items[UI_MENU_ITEMS] = {
+    "Snake",
     "About System",
     "Reboot",
 };
@@ -370,8 +371,10 @@ void ui_draw_start_menu(int sel) {
 
 /* ---------- Окно "О системе" (частота - РЕАЛЬНАЯ) ---------- */
 
+#include "sysinfo.h"
+
 void ui_draw_about_window(void) {
-    int w = 210, h = 150;
+    int w = 220, h = 170;
     int x = (320 - w) / 2;
     int y = (216 - h) / 2;
 
@@ -382,20 +385,37 @@ void ui_draw_about_window(void) {
     st7789_fill_rect(x + w - 1, y, 1, h, WIN_GRAY_DARK);
 
     st7789_fill_rect(x + 3, y + 3, w - 6, 14, TITLE_BLUE);
-    st7789_draw_string(x + 6, y + 6, "About PhoenixOS", COLOR_WHITE, TITLE_BLUE, 1);
+    st7789_draw_string(x + 6, y + 6, "About PhoenixOS v0.9.3", COLOR_WHITE, TITLE_BLUE, 1);
 
     int ty = y + 24;
-    st7789_draw_string(x + 8, ty, "PhoenixOS v0.9 Kernel", COLOR_BLACK, WIN_GRAY_BASE, 1);
-    st7789_draw_string(x + 8, ty + 12, "MCU: RP2350 M33 x2", COLOR_BLACK, WIN_GRAY_BASE, 1);
+    st7789_draw_string(x + 8, ty, "MCU: RP2350 M33 x2", COLOR_BLACK, WIN_GRAY_BASE, 1);
     {
         char clk[24];
         uint32_t hz = clock_get_hz(clk_sys);
         snprintf(clk, sizeof(clk), "Clock: %u MHz", (unsigned)((hz + 500000) / 1000000));
-        st7789_draw_string(x + 8, ty + 24, clk, COLOR_BLACK, WIN_GRAY_BASE, 1);
+        st7789_draw_string(x + 8, ty + 12, clk, COLOR_BLACK, WIN_GRAY_BASE, 1);
     }
-    st7789_draw_string(x + 8, ty + 36, "RAM: 520 KB SRAM", COLOR_BLACK, WIN_GRAY_BASE, 1);
+    {
+        char ram[32];
+        uint32_t total_kb, free_kb;
+        sysinfo_ram_kb(&total_kb, &free_kb);
+        snprintf(ram, sizeof(ram), "RAM: %lu/%lu KB", (unsigned long)free_kb, (unsigned long)total_kb);
+        st7789_draw_string(x + 8, ty + 24, ram, COLOR_BLACK, WIN_GRAY_BASE, 1);
+    }
+    {
+        char sd[40];
+        uint32_t total_kb, free_kb;
+        sysinfo_sd_kb(&total_kb, &free_kb);
+        if (total_kb > 0) {
+            snprintf(sd, sizeof(sd), "SD: %lu/%lu MB", (unsigned long)(free_kb / 1024), (unsigned long)(total_kb / 1024));
+        } else {
+            snprintf(sd, sizeof(sd), "SD: not mounted");
+        }
+        st7789_draw_string(x + 8, ty + 36, sd, COLOR_BLACK, WIN_GRAY_BASE, 1);
+    }
     st7789_draw_string(x + 8, ty + 48, "LCD: 320x240 ST7789", COLOR_BLACK, WIN_GRAY_BASE, 1);
-    st7789_draw_string(x + 8, ty + 60, "Storage: SD FAT32", COLOR_BLACK, WIN_GRAY_BASE, 1);
+    st7789_draw_string(x + 8, ty + 60, "Sound: core1 service", COLOR_BLACK, WIN_GRAY_BASE, 1);
+    st7789_draw_string(x + 8, ty + 72, "Watchdog: 1.5s", COLOR_BLACK, WIN_GRAY_BASE, 1);
 
     int bw = 40, bh = 16;
     int bx = x + (w - bw) / 2;

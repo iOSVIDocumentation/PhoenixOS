@@ -3,6 +3,7 @@
 #include "buzzer.h"
 #include "st7789.h"
 #include "hardware/watchdog.h"
+#include <stdio.h>
 
 /* ---------- Меню "Пуск" ---------- */
 
@@ -33,6 +34,8 @@ static void menu_tick(const core_input_t *in, uint32_t delta_ms) {
     if (in->ok_pressed) {
         buzzer_click();
         if (menu_sel == 0) {
+            core_open(APP_SNAKE, 0);
+        } else if (menu_sel == 1) {
             core_open(APP_ABOUT, 0);
         } else {
             st7789_set_backlight(0);

@@ -3,8 +3,7 @@
 
 #include "pico/stdlib.h"
 #include <stdbool.h>
-
-#define PIN_BUZZER 7
+#include "board.h"
 
 void buzzer_init(void);
 void buzzer_set_enabled(bool en);
@@ -14,7 +13,6 @@ void buzzer_click(void);
 void buzzer_error(void);
 void buzzer_success(void);
 void buzzer_startup(void);
-
 void buzzer_tone_on(uint16_t freq_hz);
 void buzzer_tone_off(void);
 

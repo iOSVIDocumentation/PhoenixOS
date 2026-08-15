@@ -6,7 +6,7 @@
 #include "files.h"
 #include "settings.h"
 
-#define UI_MENU_ITEMS 2
+#define UI_MENU_ITEMS 3
 
 #define ICON_MY_PC    0
 #define ICON_FILES    1

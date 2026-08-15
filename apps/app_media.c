@@ -1,6 +1,7 @@
 #include "phoenix_core.h"
 #include "ui.h"
 #include "buzzer.h"
+#include "sound_svc.h"
 #include "st7789.h"
 #include "ff.h"
 #include "hardware/spi.h"
@@ -10,7 +11,7 @@
 
 /* LCD 24 МГц безопасно на дюпонтах (~20 fps с конвейером).
  * Если стабильно — ставь 48*1000*1000 для ~30 fps. */
-#define MV_LCD_HZ (24 * 1000 * 1000)
+#define MV_LCD_HZ (48 * 1000 * 1000) /* если артефакты на дюпонтах - верни 24 */
 
 #define MV_MAX      32
 #define MV_NAME_LEN 28
@@ -23,6 +24,8 @@
 #define CMD_OPEN 1
 #define CMD_READ 2
 #define CMD_STOP 3
+
+volatile uint32_t g_core1_heartbeat = 0;
 
 static char mv_names[MV_MAX][MV_NAME_LEN];
 static int mv_count = 0;
@@ -51,6 +54,9 @@ static bool c1_open = false;
 
 static void core1_worker(void) {
     while (true) {
+        g_core1_heartbeat++;
+        sound_svc_core1_tick(c1_audio && c1_open);
+
         if (multicore_fifo_rvalid()) {
             uint32_t cmd = multicore_fifo_pop_blocking();
             if (cmd == CMD_OPEN) {
@@ -93,12 +99,12 @@ static void core1_worker(void) {
                 if (f_lseek(&pf, 24 + idx * FRAME_SZ) == FR_OK &&
                     f_read(&pf, frame_buf[slot], FRAME_SZ, &br) == FR_OK && br == FRAME_SZ) {
                     ok = 1;
-                    }
-                    multicore_fifo_push_blocking(ok);
+                }
+                multicore_fifo_push_blocking(ok);
             } else if (cmd == CMD_STOP) {
                 if (c1_open) { f_close(&pf); c1_open = false; }
                 c1_audio = false;
-                buzzer_tone_off();
+                sound_svc_tone_off();
                 multicore_fifo_push_blocking(1);
             }
         } else {
@@ -111,12 +117,12 @@ static void core1_worker(void) {
                     if (f_lseek(&pf, c1_audio_off + c1_note_idx * 4) == FR_OK &&
                         f_read(&pf, nb, 4, &br) == FR_OK && br == 4) {
                         uint16_t fq = nb[0] | (nb[1] << 8);
-                    uint16_t du = nb[2] | (nb[3] << 8);
-                    if (du == 0) du = 100;
-                    buzzer_tone_on(fq);
+                        uint16_t du = nb[2] | (nb[3] << 8);
+                        if (du == 0) du = 100;
+                        sound_svc_movie_note(fq, du);
                         c1_note_end = now + du;
-                        }
-                        c1_note_idx++;
+                    }
+                    c1_note_idx++;
                 }
             }
         }
@@ -309,7 +315,8 @@ static void media_tick(const core_input_t *in, uint32_t delta_ms) {
     uint32_t now = to_ms_since_boot(get_absolute_time());
     uint32_t period = 1000 / pv_fps;
     if (now - frame_time < period) return;
-    frame_time = now;
+    frame_time += period;                 /* точный темп: не копим джиттер */
+    if (now - frame_time > period) frame_time = now; /* лаг - сброс долга */
 
     /* Запрашиваем следующий кадр ДО отрисовки текущего (перекрытие) */
     bool requested = false;

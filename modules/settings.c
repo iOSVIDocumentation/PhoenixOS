@@ -10,18 +10,33 @@ static void defaults(settings_t *s) {
     s->brightness = 100;
     s->cursor_speed = 2;
     s->sound_enabled = true;
-    s->cpu_mhz = 150;
+    s->cpu_mhz = 250; /* разгон по умолчанию */
     s->wallpaper[0] = 0;
+}
+
+static int clamp_int(int v, int lo, int hi) {
+    if (v < lo) return lo;
+    if (v > hi) return hi;
+    return v;
 }
 
 void settings_load(settings_t *s) {
     defaults(s);
     FIL f;
-    if (f_open(&f, SETTINGS_PATH, FA_READ) != FR_OK) return;
+    if (f_open(&f, SETTINGS_PATH, FA_READ) != FR_OK) {
+        /* файла нет (пустая карта или первый запуск) — создаём с дефолтами */
+        settings_save(s);
+        return;
+    }
     char buf[256];
     UINT br = 0;
     f_read(&f, buf, sizeof(buf) - 1, &br);
     f_close(&f);
+    if (br == 0) {
+        /* файл пустой — перезаписываем дефолтами */
+        settings_save(s);
+        return;
+    }
     buf[br] = 0;
 
     char *p = buf;
@@ -36,16 +51,13 @@ void settings_load(settings_t *s) {
             const char *key = p;
             const char *val = eq + 1;
             if (strcmp(key, "bright") == 0) {
-                int v = atoi(val);
-                if (v == 25 || v == 50 || v == 75 || v == 100) s->brightness = (uint8_t)v;
+                s->brightness = (uint8_t)clamp_int(atoi(val), 0, 100);
             } else if (strcmp(key, "cursor") == 0) {
-                int v = atoi(val);
-                if (v >= 1 && v <= 3) s->cursor_speed = (uint8_t)v;
+                s->cursor_speed = (uint8_t)clamp_int(atoi(val), 1, 3);
             } else if (strcmp(key, "sound") == 0) {
                 s->sound_enabled = (strcmp(val, "on") == 0);
             } else if (strcmp(key, "cpu") == 0) {
-                int v = atoi(val);
-                if (v == 150 || v == 200 || v == 225 || v == 250) s->cpu_mhz = (uint16_t)v;
+                s->cpu_mhz = (uint16_t)clamp_int(atoi(val), 100, 300);
             } else if (strcmp(key, "wallpaper") == 0) {
                 strncpy(s->wallpaper, val, sizeof(s->wallpaper) - 1);
                 s->wallpaper[sizeof(s->wallpaper) - 1] = 0;

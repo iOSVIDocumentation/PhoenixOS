@@ -44,6 +44,9 @@ static void desktop_tick(const core_input_t *in, uint32_t delta_ms) {
         } else if (last_hover == ICON_SETTINGS) {
             buzzer_click();
             core_open(APP_SETTINGS, 0);
+        } else if (last_hover == ICON_GAMES) {
+            buzzer_click();
+            core_open(APP_SNAKE, 0);
         } else if (last_hover == ICON_MEDIA) {
             buzzer_click();
             media_open_path("");

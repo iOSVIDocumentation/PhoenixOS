@@ -1,6 +1,5 @@
 cmake_minimum_required(VERSION 3.13)
 
-# PhoenixOS: строго Pico 2 (RP2350)
 set(PICO_BOARD pico2)
 
 include(pico_sdk_import.cmake)
@@ -14,6 +13,8 @@ add_subdirectory(fatfs_lib/FatFs_SPI fatfs_build)
 add_executable(PhoenixOS
     main.c
     core/phoenix_core.c
+    core/fs_mutex.c
+    core/sound_svc.c
     apps/app_desktop.c
     apps/app_system.c
     apps/app_files.c
@@ -21,6 +22,7 @@ add_executable(PhoenixOS
     apps/app_settings.c
     apps/app_media.c
     apps/app_wolf3d.c
+    apps/app_snake.c
     drivers/st7789.c
     drivers/buzzer.c
     drivers/joystick.c
@@ -31,6 +33,7 @@ add_executable(PhoenixOS
     modules/settings.c
     modules/wallpaper.c
     modules/sound.c
+    modules/sysinfo.c
     modules/hw_config.c
 )
 

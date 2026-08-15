@@ -9,6 +9,10 @@
 #include "settings.h"
 #include "ui.h"
 #include "phoenix_core.h"
+#include "sysinfo.h"
+#include "hardware/clocks.h"
+
+extern const phoenix_app_t app_snake;
 
 static bool safe_mode = false;
 
@@ -17,7 +21,7 @@ static void draw_bootscreen(void) {
     st7789_draw_rect(10, 10, 300, 220, COLOR_WHITE);
     st7789_draw_rect(12, 12, 296, 216, COLOR_LIGHT_BLUE);
     st7789_draw_string(80, 45, "PhoenixOS", COLOR_WHITE, COLOR_WIN_BG, 3);
-    st7789_draw_string(72, 80, "Retro Workstation v0.9", COLOR_LIGHT_BLUE, COLOR_WIN_BG, 1);
+    st7789_draw_string(72, 80, "Retro Workstation v0.9.3", COLOR_LIGHT_BLUE, COLOR_WIN_BG, 1);
     st7789_draw_string(104, 95, "Kernel Edition", COLOR_LIGHT_BLUE, COLOR_WIN_BG, 1);
     st7789_draw_string(68, 110, "RP2350 (ARM Cortex-M33)", COLOR_DARK_GRAY, COLOR_WIN_BG, 1);
     if (safe_mode) {
@@ -63,6 +67,9 @@ int main(void) {
             g_settings.cpu_mhz = 150;
         }
     }
+    printf("[PhoenixOS] cpu: target=%u MHz, actual=%u MHz\n",
+           (unsigned)g_settings.cpu_mhz,
+           (unsigned)(clock_get_hz(clk_sys) / 1000000));
 
     sleep_ms(1500);
 
@@ -76,6 +83,7 @@ int main(void) {
     core_register(APP_CPU,       &app_cpu);
     core_register(APP_MEDIA,     &app_media);
     core_register(APP_WOLF3D,    &app_wolf3d);
+    core_register(APP_SNAKE, &app_snake);
 
     core_start(APP_DESKTOP);
     return 0;
