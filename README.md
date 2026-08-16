@@ -1,6 +1,11 @@
 # PhoenixOS
 
-A retro-style workstation operating system for the Raspberry Pi Pico 2
+[![Version](https://img.shields.io/badge/version-v0.9.6-blue)](../../releases)
+[![MCU](https://img.shields.io/badge/MCU-RP2350%20%7C%20dual%20Cortex--M33-green)](https://www.raspberrypi.com/products/rp2350/)
+[![Language](https://img.shields.io/badge/language-C99-orange)]()
+[![License](https://img.shields.io/badge/license-MIT-lightgrey)](#license)
+
+A retro-style workstation operating system for the **Raspberry Pi Pico 2**
 (RP2350, dual-core ARM Cortex-M33). PhoenixOS turns a $6 microcontroller
 board into a tiny desktop computer: a windowed UI with themes, a file
 manager, a PVX media player, games, SD-backed configuration and a
@@ -17,18 +22,19 @@ Current version: **v0.9.6**
   live switching in the Control Panel.
 - **Per-theme desktop icons stored on the SD card**
   (/themes/<name>/icons.rgb, 5 icons 32x32, RGB565, magenta = transparent).
-  Missing icon sets are generated automatically on first boot; user files
-  are never overwritten.
-- **Games menu** with Snake (Classic + Maze, persistent records, themed UI)
-  and the new **Tetris** (Easy / Medium, hold-to-move, dual rotation:
+  Missing icon sets are generated automatically on first boot; user
+  files are never overwritten.
+- **Games menu** with Snake (Classic + Maze, persistent records, themed
+  UI) and the new **Tetris** (Easy / Medium, hold-to-move, dual rotation:
   MENU button + joystick press, OK = hard drop).
 - **Full SD auto-provisioning**: on an empty card the OS creates videos/,
-  wallpapers/, themes/, config.txt, phoenix.cfg (stock 150 MHz, no overclock)
-  and snake.hi by itself.
+  wallpapers/, themes/, config.txt, phoenix.cfg (stock 150 MHz, no
+  overclock) and snake.hi by itself.
 - **Reliability fixes**: SD statistics cached at boot (eliminates the
   watchdog timeout in "About System"); dynamic app registration fix;
   smooth row-based cursor/icon rendering.
-- **Documentation**: professional English README with correct rendering.
+- **Documentation**: professional English README, full GPIO pinout table,
+  MIT license.
 - **Packaging**: the release ships the complete source archive next to
   the UF2 firmware.
 
@@ -51,17 +57,37 @@ Current version: **v0.9.6**
 - Performance: stock 150 MHz or user-selectable overclock up to 250 MHz,
   persisted in the config file.
 
-## Hardware Reference
+## Hardware & Pinout
 
-| Block | Details |
+| Block | Interface | Notes |
+|---|---|---|
+| Display | ST7789 320x240, SPI0 | 10-48 MHz, PWM backlight |
+| SD card | SPI1 | 12.5 MHz (25 MHz not stable on this wiring) |
+| Joystick | ADC0 / ADC1 + GPIO | analog axes + press switch |
+| Buttons | 3x GPIO | MENU / OK / BACK |
+| Buzzer | PWM | owned exclusively by core 1 |
+| Backlight | PWM | smooth 0-100% |
+
+### GPIO Map (generated from drivers/board.h - source of truth)
+
+| Signal | GPIO |
 |---|---|
-| MCU | Raspberry Pi Pico 2 (RP2350), 520 KB SRAM |
-| Display | ST7789 320x240, SPI0 @ 10-48 MHz (DC 16, CS 17, SCK 18, MOSI 19, RST 20, backlight 21 / PWM) |
-| SD card | SPI1 @ 12.5 MHz (full pin map: PINOUT.md) |
-| Joystick | X = GP26 (ADC0), Y = GP27 (ADC1), press = GP5 |
-| Buttons | MENU = GP2, OK = GP3, BACK = GP4 |
-| Buzzer | GP7 (PWM, owned exclusively by core 1) |
-| Backlight | GP21, smooth 0-100% PWM |
+| PIN_LCD_SCK | GP18 |
+| PIN_LCD_MOSI | GP19 |
+| PIN_LCD_DC | GP16 |
+| PIN_LCD_CS | GP17 |
+| PIN_LCD_RST | GP20 |
+| PIN_LCD_BLK | GP21 |
+| PIN_SD_SCK | GP10 |
+| PIN_SD_MOSI | GP11 |
+| PIN_SD_MISO | GP12 |
+| PIN_SD_CS | GP13 |
+| JOY_X_PIN | GP26 |
+| JOY_Y_PIN | GP27 |
+| JOY_SW_PIN | GP5 |
+| PIN_BUZZER | GP7 |
+
+Wiring details and schematics notes: see PINOUT.md in this repository.
 
 ## Controls
 
@@ -80,7 +106,7 @@ Current version: **v0.9.6**
     |-- wallpapers/      *.rgb wallpapers (320x240, RGB565 BE)
     |-- themes/
     |   |-- phoenix/icons.rgb   per-theme desktop icon sets
-    |   |-- xp/icons.rgb        (5 icons, 32x32, RGB565 BE,
+    |   |-- xp/icons.rb         (5 icons, 32x32, RGB565 BE,
     |   |                       magenta = transparent)
     |   +-- macos/icons.rgb
     |-- config.txt       board marker ("System OK")
@@ -126,7 +152,7 @@ RPI-RP2 drive.
 ## Changelog
 
 ### v0.9.6
-- README rendering fix on GitHub; professional English documentation.
+- README rendering fix; badges, full GPIO pinout table, MIT license.
 - Release ships the complete source archive alongside the UF2.
 - Version housekeeping across UI, boot screen and docs.
 
@@ -147,4 +173,5 @@ RPI-RP2 drive.
 
 ## License
 
-See the repository. (c) PhoenixOS project.
+PhoenixOS is released under the **MIT License** - see the [LICENSE](LICENSE)
+file. Copyright (c) 2026 iOSVIDocumentation (PhoenixOS project).
