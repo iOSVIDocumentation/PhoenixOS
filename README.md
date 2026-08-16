@@ -6,9 +6,17 @@ board into a tiny desktop computer: a windowed UI with themes, a file
 manager, a PVX media player, games, SD-backed configuration and a
 safety-monitored dual-core kernel.
 
-Current version: **v0.9.5**
+Current version: **v0.9.6**
 
 ---
+
+## What's New in v0.9.6
+
+- Documentation hardening: the GitHub page now renders correctly
+  (indented code blocks, no broken fences).
+- Release packaging: v0.9.6 ships the complete source archive next to
+  the UF2 firmware.
+- All v0.9.5 features listed below remain included.
 
 ## What's New in v0.9.5
 
@@ -121,6 +129,11 @@ Hold BOOTSEL, plug the board in, then copy build/PhoenixOS.uf2 to the
 RPI-RP2 drive.
 
 ## Changelog
+
+### v0.9.6
+- README rendering fix on GitHub.
+- Release now includes the full source archive.
+- Version housekeeping across UI, boot screen and documentation.
 
 ### v0.9.5
 - Theme engine: Phoenix / Windows XP / Mac OS Classic, live switching.
