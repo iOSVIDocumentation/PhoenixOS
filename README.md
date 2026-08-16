@@ -10,32 +10,27 @@ Current version: **v0.9.6**
 
 ---
 
-## What's New in v0.9.6
+## What's New in v0.9.6 (includes everything from v0.9.5)
 
-- Documentation hardening: the GitHub page now renders correctly
-  (indented code blocks, no broken fences).
-- Release packaging: v0.9.6 ships the complete source archive next to
-  the UF2 firmware.
-- All v0.9.5 features listed below remain included.
-
-## What's New in v0.9.5
-
-- **Theme engine** with three skins: Phoenix, Windows XP and Mac OS
-  Classic. Every window, menu and the boot screen follow the active theme.
+- **Theme engine**: Phoenix, Windows XP and Mac OS Classic skins.
+  Every window, menu and the boot screen follow the active theme;
+  live switching in the Control Panel.
 - **Per-theme desktop icons stored on the SD card**
   (/themes/<name>/icons.rgb, 5 icons 32x32, RGB565, magenta = transparent).
   Missing icon sets are generated automatically on first boot; user files
   are never overwritten.
-- **Games menu** with Snake (Classic + Maze, persistent records) and the
-  new **Tetris** (Easy / Medium, hold-to-move, two rotation buttons).
+- **Games menu** with Snake (Classic + Maze, persistent records, themed UI)
+  and the new **Tetris** (Easy / Medium, hold-to-move, dual rotation:
+  MENU button + joystick press, OK = hard drop).
 - **Full SD auto-provisioning**: on an empty card the OS creates videos/,
-  wallpapers/, themes/, config.txt, phoenix.cfg and snake.hi with safe
-  defaults (stock 150 MHz, no overclock).
-- **Reliability fix**: SD statistics are cached at boot, eliminating the
-  watchdog timeout in "About System".
-- Fixed dynamic application registration; smoothed cursor and icon
-  rendering; themed boot screen.
-- Professional English documentation; release ships with full sources.
+  wallpapers/, themes/, config.txt, phoenix.cfg (stock 150 MHz, no overclock)
+  and snake.hi by itself.
+- **Reliability fixes**: SD statistics cached at boot (eliminates the
+  watchdog timeout in "About System"); dynamic app registration fix;
+  smooth row-based cursor/icon rendering.
+- **Documentation**: professional English README with correct rendering.
+- **Packaging**: the release ships the complete source archive next to
+  the UF2 firmware.
 
 ---
 
@@ -131,9 +126,9 @@ RPI-RP2 drive.
 ## Changelog
 
 ### v0.9.6
-- README rendering fix on GitHub.
-- Release now includes the full source archive.
-- Version housekeeping across UI, boot screen and documentation.
+- README rendering fix on GitHub; professional English documentation.
+- Release ships the complete source archive alongside the UF2.
+- Version housekeeping across UI, boot screen and docs.
 
 ### v0.9.5
 - Theme engine: Phoenix / Windows XP / Mac OS Classic, live switching.
@@ -142,7 +137,6 @@ RPI-RP2 drive.
 - Full SD auto-provisioning for empty cards.
 - Boot-time cached SD statistics (watchdog-timeout fix in About).
 - Dynamic registration fix; smoother rendering; themed boot screen.
-- English documentation; release includes full sources.
 
 ### v0.9.3
 - FatFs inter-core mutex, watchdog, core-1 heartbeat, thermal guard.
