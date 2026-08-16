@@ -1,4 +1,4 @@
-# PhoenixOS 
+# PhoenixOS
 
 [![Version](https://img.shields.io/badge/version-v0.9.6-blue)](../../releases)
 [![MCU](https://img.shields.io/badge/MCU-RP2350%20%7C%20dual%20Cortex--M33-green)](https://www.raspberrypi.com/products/rp2350/)
@@ -45,8 +45,8 @@ flash one UF2 file and get a tiny desktop computer.
   snake.hi by itself.
 - 🛡️ **Reliability** — cached SD statistics (no more watchdog timeout in
   "About System"), dynamic registration fix, smooth rendering.
-- 📖 **Docs & packaging** — English README, pinout table, MIT license,
-  source archive in the release.
+- 📖 **Docs & packaging** — English README, exact pinout table,
+  Apache 2.0 license, source archive in the release.
 
 ---
 
@@ -70,33 +70,42 @@ flash one UF2 file and get a tiny desktop computer.
 
 ## Hardware & Pinout
 
-| Block | Interface | Notes |
-|---|---|---|
-| Display | ST7789 320×240 | SPI0, 10–48 MHz, PWM backlight |
-| SD card | SPI1 | 12.5 MHz (25 MHz is not stable on this wiring) |
-| Joystick | ADC + GPIO | analog X/Y + press switch |
-| Buttons | 3 × GPIO | MENU / OK / BACK |
-| Buzzer | PWM | owned exclusively by core 1 |
+Target display module: **2.4" TFT SPI 240×320 v1.3** (with on-board SD slot).
+Pico leg numbers assume USB up (left column 1–20 top-down, right column
+21–40 bottom-up).
 
 <details>
 <summary>📌 <b>Pinout — who connects where (open table)</b></summary>
 
-| Component | Signal (board.h) | Pico pin |
-|---|---|---|
-| ST7789 display (SPI0) | `PIN_LCD_DC` | **GP16** |
-| ST7789 display (SPI0) | `PIN_LCD_CS` | **GP17** |
-| ST7789 display (SPI0) | `PIN_LCD_SCK` | **GP18** |
-| ST7789 display (SPI0) | `PIN_LCD_MOSI` | **GP19** |
-| ST7789 display (SPI0) | `PIN_LCD_RST` | **GP20** |
-| ST7789 display (SPI0) | `PIN_LCD_BLK` | **GP21** |
-| SD card (SPI1) | `PIN_SD_SCK` | **GP10** |
-| SD card (SPI1) | `PIN_SD_MOSI` | **GP11** |
-| SD card (SPI1) | `PIN_SD_MISO` | **GP12** |
-| SD card (SPI1) | `PIN_SD_CS` | **GP13** |
-| Joystick | `JOY_SW_PIN` | **GP5** |
-| Joystick | `JOY_X_PIN` | **GP26** |
-| Joystick | `JOY_Y_PIN` | **GP27** |
-| Buzzer | `PIN_BUZZER` | **GP7** |
+| Module | Pin on module | Pico leg | GPIO | Notes |
+|---|---|---|---|---|
+| **Display — 8 connected pins** | VCC | 36 | 3V3 | power |
+| | GND | 38 | GND | ground |
+| | SCK | 24 | GP18 | SPI0 clock |
+| | SDI (MOSI) | 25 | GP19 | SPI0 data |
+| | RESET | 26 | GP20 | reset |
+| | DC | 21 | GP16 | data/command |
+| | CS | 22 | GP17 | chip select |
+| | LED | 27 | GP21 | backlight, PWM |
+| **Display — not connected** | SDO (MISO) | — | — | unused |
+| | T_CLK / T_CS / T_DIN / T_DO / T_IRQ | — | — | touch unused |
+| **SD slot (on the module)** | SD_SCK | 14 | GP10 | SPI1 clock |
+| | SD_MOSI | 15 | GP11 | data to card |
+| | SD_MISO | 16 | GP12 | data from card |
+| | SD_CS | 17 | GP13 | card select |
+| | power | — | — | soldered on the board |
+| **Joystick** | VCC | 36 | 3V3 | |
+| | GND | 23 | GND | |
+| | VRx | 31 | GP26 | ADC0, analog X |
+| | VRy | 32 | GP27 | ADC1, analog Y |
+| | SW | 7 | GP5 | press switch |
+| **Buttons** | MENU | 4 | GP2 | second pin = GND |
+| | OK | 5 | GP3 | second pin = GND |
+| | BACK | 6 | GP4 | second pin = GND |
+| **Buzzer** | + | 10 | GP7 | PWM output |
+| | − | — | GND | |
+| **Power** | +5V | 39 | VSYS | or USB |
+| | GND | 38 | GND | common ground |
 
 Full wiring notes: `PINOUT.md`.
 
@@ -189,8 +198,10 @@ Hold **BOOTSEL**, plug the board in, copy `build/PhoenixOS.uf2` to the
 <summary>🕰️ <b>v0.9.6 / v0.9.5 / v0.9.3 (open)</b></summary>
 
 ### v0.9.6
-- README hardening: badges, TOC, collapsible sections, pinout table,
-  MIT license.
+- Exact pinout table matching the real module silkscreen
+  (2.4" TFT v1.3, 8 connected display pins + on-board SD slot).
+- README hardening: badges, TOC, collapsible sections.
+- License changed to Apache 2.0.
 - Release ships the complete source archive alongside the UF2.
 
 ### v0.9.5
@@ -213,7 +224,7 @@ Hold **BOOTSEL**, plug the board in, copy `build/PhoenixOS.uf2` to the
 
 ## License
 
-PhoenixOS is open-source software released under the **Apache License, Version 2.0** —
+PhoenixOS is released under the **Apache License, Version 2.0** —
 see the [LICENSE](LICENSE) file.
 
 Copyright 2026 iOSVIDocumentation (PhoenixOS project).
@@ -221,6 +232,7 @@ Copyright 2026 iOSVIDocumentation (PhoenixOS project).
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this work except in compliance with the License.
 You may obtain a copy of the License at
+
 http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
