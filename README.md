@@ -1,77 +1,143 @@
-<p align="center">
-  <img src="https://img.shields.io/badge/PhoenixOS-v0.9.3-001F?style=for-the-badge&logo=raspberrypi&logoColor=white" />
-  <img src="https://img.shields.io/badge/RP2350-Cortex--M33%20x2-A00000?style=for-the-badge" />
-  <img src="https://img.shields.io/badge/250%20MHz-verified-07E0?style=for-the-badge" />
-</p>
+# PhoenixOS
 
-# 🦅 PhoenixOS — Retro Workstation для Raspberry Pi Pico 2
+A retro-style workstation operating system for the Raspberry Pi Pico 2
+(RP2350, dual-core ARM Cortex-M33). PhoenixOS turns a $6 microcontroller
+board into a tiny desktop computer: a windowed UI with themes, a file
+manager, a PVX media player, games, SD-backed configuration and a
+safety-monitored dual-core kernel.
 
-**Настоящая ОС** на микроконтроллере: рабочий стол в стиле Win95, файловый менеджер, медиаплеер 30 fps, игры, разгон до 250 МГц, двухъядерная архитектура.
+Current version: **v0.9.5**
 
-## 🚀 Быстрый старт
-1. Скачай `PhoenixOS.uf2` из [Releases](../../releases/latest)
-2. Зажми **BOOTSEL**, подключи USB
-3. Скопируй UF2 на диск `RPI-RP2`
+---
 
-SD-карта (FAT32), всё создаётся само:
+## What's New in v0.9.5
+
+- **Theme engine** with three skins: Phoenix, Windows XP and Mac OS
+  Classic. Every window, menu and the boot screen follow the active theme.
+- **Per-theme desktop icons stored on the SD card**
+  (/themes/<name>/icons.rgb, 5 icons 32x32, RGB565, magenta = transparent).
+  Missing icon sets are generated automatically on first boot; user files
+  are never overwritten.
+- **Games menu** with Snake (Classic + Maze, persistent records) and the
+  new **Tetris** (Easy / Medium, hold-to-move, two rotation buttons).
+- **Full SD auto-provisioning**: on an empty card the OS creates videos/,
+  wallpapers/, themes/, config.txt, phoenix.cfg and snake.hi with safe
+  defaults (stock 150 MHz, no overclock).
+- **Reliability fix**: SD statistics are cached at boot, eliminating the
+  watchdog timeout in "About System".
+- Fixed dynamic application registration; smoothed cursor and icon
+  rendering; themed boot screen.
+- Professional English documentation; release ships with full sources.
+
+---
+
+## Feature Highlights
+
+- Dual-core architecture:
+  - Core 0 (master): 100 Hz main loop, input, ST7789 rendering,
+    applications, hardware watchdog (1.5 s), thermal guard (65 C).
+  - Core 1 (service): PVX media stream (30 fps), PWM sound service,
+    heartbeat counter.
+  - IPC via multicore FIFO (media), lock-free queue (sound) and a FatFs
+    re-entrancy mutex between cores.
+- Applications: desktop with cursor and icons, Start menu, file manager,
+  viewer, control panel, wallpaper picker, CPU frequency manager, system
+  monitor, PVX media player, Snake, Tetris, Wolfenstein-style 3D demo.
+- Safety: hardware watchdog, core-1 heartbeat supervision, thermal
+  rollback to 150 MHz, safe mode (hold BACK at power-on), FatFs mutex.
+- Performance: stock 150 MHz or user-selectable overclock up to 250 MHz,
+  persisted in the config file.
+
+## Hardware Reference
+
+| Block | Details |
+|---|---|
+| MCU | Raspberry Pi Pico 2 (RP2350), 520 KB SRAM |
+| Display | ST7789 320x240, SPI0 @ 10-48 MHz (DC 16, CS 17, SCK 18, MOSI 19, RST 20, backlight 21 / PWM) |
+| SD card | SPI1 @ 12.5 MHz (full pin map: PINOUT.md) |
+| Joystick | X = GP26 (ADC0), Y = GP27 (ADC1), press = GP5 |
+| Buttons | MENU = GP2, OK = GP3, BACK = GP4 |
+| Buzzer | GP7 (PWM, owned exclusively by core 1) |
+| Backlight | GP21, smooth 0-100% PWM |
+
+## Controls
+
+| Input | Action |
+|---|---|
+| Joystick | cursor movement / list navigation / Snake and Tetris control |
+| Joystick press (SW) | OK (and piece rotation in Tetris) |
+| MENU | Start menu (piece rotation in Tetris) |
+| OK | confirm / hard drop in Tetris |
+| BACK | return / save settings (hold at power-on for safe mode) |
+
+## SD Card Layout (created automatically)
 
     /
-    ├── phoenix.cfg   <- настройки (авто-создание, cpu=250)
-    ├── wallpapers/   <- обои .rgb
-    ├── videos/       <- видео .pvx
-    └── snake.hi      <- рекорды змейки
+    |-- videos/          PVX movies for the media player
+    |-- wallpapers/      *.rgb wallpapers (320x240, RGB565 BE)
+    |-- themes/
+    |   |-- phoenix/icons.rgb   per-theme desktop icon sets
+    |   |-- xp/icons.rgb        (5 icons, 32x32, RGB565 BE,
+    |   |                       magenta = transparent)
+    |   +-- macos/icons.rgb
+    |-- config.txt       board marker ("System OK")
+    |-- phoenix.cfg      system settings (safe defaults, auto-created)
+    |-- snake.hi         Snake high scores (classic / maze)
+    +-- reset.log        boot/reset journal (diagnostics)
 
-Конвертер видео:
+phoenix.cfg keys: bright (25/50/75/100), cursor (1-3), sound (on/off),
+cpu (150/200/225/250), theme (0/1/2), wallpaper (path or empty).
 
-    sudo dnf install -y ffmpeg
-    ~/pvx video.mp4     # сам найдёт SD, положит в /videos/
+## Repository Structure
 
-## ✨ Возможности
-- 🖥️ Рабочий стол: иконки My PC / Files / Settings / **Games** / Media, панель задач, обои
-- 🎮 **Snake**: CLASSIC + MAZE (просторные лабиринты без замкнутых зон, flood-fill), рекорды на SD, ретро-графика
-- 🎬 Медиаплеер v2: 30 fps, LCD 48 МГц, чиптюн-звук, точный темп
-- ⚙️ Настройки: яркость 0–100%, курсор, звук, разгон 150–250 МГц, обои
-- 📂 Файловый менеджер по SD (FAT32)
-- 🔊 Звук-сервис на **core1** (PWM, без заиканий UI)
+    main.c         boot screen, init, app registration
+    core/          kernel: registry, main loop, watchdog, heartbeat,
+                   FatFs mutex, sound service, SD provisioning
+    apps/          desktop, start menu, files, viewer, settings,
+                   wallpaper, cpu, media, snake, tetris, wolf3d,
+                   games menu
+    drivers/       board.h (single source of truth for pins),
+                   st7789, buzzer, joystick, buttons
+    modules/       ui (themed renderer), settings, themes, theme icons,
+                   wallpaper, files, viewer, sysinfo, sound
+    fatfs_lib/     FatFs_SPI submodule
 
-## 🔧 Железо
-| Компонент | Интерфейс |
-|---|---|
-| Pico 2 (RP2350, M33 x2, 520 KB SRAM) | — |
-| ST7789 320×240 | SPI0, 10 МГц (48 МГц в видео) |
-| MicroSD | SPI1, 12.5 МГц |
-| Джойстик + 3 кнопки | ADC + GPIO |
-| Буззер | PWM |
+## Building from Source
 
-📌 Полная распиновка — [`PINOUT.md`](PINOUT.md)
+Requirements: Linux (Fedora tested), cmake, arm-none-eabi-gcc,
+Pico SDK 2.3.0.
 
-## ⚙️ Сборка
+    git clone --recurse-submodules https://github.com/iOSVIDocumentation/PhoenixOS
+    cd PhoenixOS
+    export PICO_SDK_PATH=$HOME/pico/pico-sdk
+    cmake -S . -B build
+    cmake --build build -j$(nproc)
 
-    export PICO_SDK_PATH=/path/to/pico-sdk
-    git clone --recursive https://github.com/iOSVIDocumentation/PhoenixOS.git
-    cd PhoenixOS && mkdir build && cd build
-    cmake .. && make -j$(nproc)
+The firmware image is build/PhoenixOS.uf2.
 
-На выходе `build/PhoenixOS.uf2`
+## Flashing
 
-## 🏗️ Архитектура
-- **Core0**: ядро, ввод, UI, приложения, watchdog 1.5 c, thermal guard 65°C
-- **Core1**: медиа-поток PVX + звук-сервис + heartbeat
-- Связь: FIFO + mutex; FatFs `FF_FS_REENTRANT=1`
-- Подробнее: [`ARCHITECTURE.md`](ARCHITECTURE.md)
+Hold BOOTSEL, plug the board in, then copy build/PhoenixOS.uf2 to the
+RPI-RP2 drive.
 
-## 🧩 Своё приложение за 5 минут
-Скопируй `apps/_template.c`, в `main.c` одна строка:
+## Changelog
 
-    core_register_dyn(&app_myapp);
+### v0.9.5
+- Theme engine: Phoenix / Windows XP / Mac OS Classic, live switching.
+- Per-theme SD icons with automatic generation of missing sets.
+- Games menu; Tetris with two difficulty modes and dual rotation buttons.
+- Full SD auto-provisioning for empty cards.
+- Boot-time cached SD statistics (watchdog-timeout fix in About).
+- Dynamic registration fix; smoother rendering; themed boot screen.
+- English documentation; release includes full sources.
 
-Открыть: `core_open(core_find("myapp"), 0);`
+### v0.9.3
+- FatFs inter-core mutex, watchdog, core-1 heartbeat, thermal guard.
+- Sound service on core 1 (no UI stutter).
+- Snake: two modes + persistent records; media player 30 fps;
+  real RAM/SD/clock readouts; smooth backlight; unified board.h;
+  250 MHz overclock validated.
 
-## 📊 Версии
-| Версия | Главное |
-|---|---|
-| **v0.9.3** ⭐ | Snake + рекорды, звук на core1, медиа 30 fps, watchdog, sysinfo, автоконфиг |
-| v0.9 | Первая публичная |
+## License
 
-## 📄 Лицензия
-**Apache License 2.0** — открытый код: используй и модифицируй свободно, но с сохранением авторства. Встроенная защита от патентных троллей. Полный текст — в [LICENSE](LICENSE).
+See the repository. (c) PhoenixOS project.

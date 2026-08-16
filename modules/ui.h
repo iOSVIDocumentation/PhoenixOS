@@ -21,9 +21,11 @@
 #define FM_ROW_H        12
 #define FM_VISIBLE_ROWS 16
 
-#define SET_ROWS 5
+#define SET_ROWS 6
 
 #define WP_VISIBLE_ROWS 9
+
+#define GAMES_ROWS 2
 
 void ui_draw_desktop(void);
 void ui_draw_taskbar(void);
@@ -46,5 +48,10 @@ void ui_picker_row(int idx, int sel, const char *current, int y);
 void ui_draw_cpu_menu(int sel, uint16_t current);
 void ui_cpu_row(int row, int sel, uint16_t current);
 void ui_files_row(const fm_state_t *st, int idx, int sel, int y);
+
+void ui_draw_title_bar(int x, int y, int w, const char *text);
+void ui_draw_bootscreen(bool safe_mode, int mount_state);
+void ui_draw_games_menu(int sel);
+void ui_games_row(int i, int sel, int y);
 
 #endif // UI_H

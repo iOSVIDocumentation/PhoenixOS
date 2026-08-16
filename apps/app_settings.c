@@ -1,6 +1,8 @@
 #include "phoenix_core.h"
 #include "ui.h"
 #include "settings.h"
+#include "theme.h"
+#include "theme_icons.h"
 #include "wallpaper.h"
 #include "buzzer.h"
 #include "st7789.h"
@@ -29,12 +31,17 @@ static void set_change(settings_t *s, int row, int dir) {
             s->sound_enabled = !s->sound_enabled;
             buzzer_set_enabled(s->sound_enabled);
             break;
+        case 3: {
+            int t = (s->theme + dir + THEME_COUNT) % THEME_COUNT;
+            s->theme = (uint8_t)t;
+            theme_set(t);
+            theme_icons_load(t);
+            break;
+        }
         default:
             break;
     }
 }
-
-/* ---------- Настройки (плавный скролл: только 2 строки) ---------- */
 
 static int set_sel = 0;
 
@@ -56,27 +63,30 @@ static void settings_tick(const core_input_t *in, uint32_t delta_ms) {
         buzzer_click();
         ui_settings_row(old_sel, set_sel, &g_settings);
         ui_settings_row(set_sel, set_sel, &g_settings);
-    } else if (in->nav_left && set_sel < 3) {
+    } else if (in->nav_left && set_sel < 4) {
         set_change(&g_settings, set_sel, -1);
         buzzer_click();
-        ui_settings_row(set_sel, set_sel, &g_settings);
-    } else if (in->nav_right && set_sel < 3) {
+        if (set_sel == 3) ui_draw_settings_window(set_sel, &g_settings);
+        else ui_settings_row(set_sel, set_sel, &g_settings);
+    } else if (in->nav_right && set_sel < 4) {
         set_change(&g_settings, set_sel, +1);
         buzzer_click();
-        ui_settings_row(set_sel, set_sel, &g_settings);
+        if (set_sel == 3) ui_draw_settings_window(set_sel, &g_settings);
+        else ui_settings_row(set_sel, set_sel, &g_settings);
     }
 
     if (in->ok_pressed) {
-        if (set_sel == 3) {
+        if (set_sel == 4) {
             buzzer_click();
             core_open(APP_WALLPAPER, 0);
-        } else if (set_sel == 4) {
+        } else if (set_sel == 5) {
             buzzer_click();
             core_open(APP_CPU, 0);
         } else {
             set_change(&g_settings, set_sel, +1);
             buzzer_click();
-            ui_settings_row(set_sel, set_sel, &g_settings);
+            if (set_sel == 3) ui_draw_settings_window(set_sel, &g_settings);
+            else ui_settings_row(set_sel, set_sel, &g_settings);
         }
     }
 
@@ -92,8 +102,6 @@ const phoenix_app_t app_settings = {
     .on_enter = settings_enter,
     .on_tick = settings_tick,
 };
-
-/* ---------- Выбор обоев ---------- */
 
 static int wp_sel = 0;
 static int wp_scroll = 0;
@@ -157,8 +165,6 @@ const phoenix_app_t app_wallpaper = {
     .on_enter = wp_enter,
     .on_tick = wp_tick,
 };
-
-/* ---------- Частота CPU ---------- */
 
 static const uint16_t cpu_opts[4] = {150, 200, 225, 250};
 static int cpu_sel = 4;

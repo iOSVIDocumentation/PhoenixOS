@@ -57,6 +57,7 @@ void core_open(app_id_t id, int arg);
 void core_start(app_id_t initial);
 
 bool core_set_cpu_mhz(uint16_t mhz);
+void core_log(const char *msg);
 
 /* Время для приложений (мс с запуска) */
 static inline uint32_t core_now_ms(void) {

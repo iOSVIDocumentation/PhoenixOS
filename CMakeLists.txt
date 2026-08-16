@@ -12,17 +12,21 @@ add_subdirectory(fatfs_lib/FatFs_SPI fatfs_build)
 
 add_executable(PhoenixOS
     main.c
+    sd_card.c
     core/phoenix_core.c
     core/fs_mutex.c
     core/sound_svc.c
+    core/provision.c
     apps/app_desktop.c
     apps/app_system.c
+    apps/app_snake.c
+    apps/app_games.c
+    apps/app_tetris.c
     apps/app_files.c
     apps/app_viewer.c
     apps/app_settings.c
     apps/app_media.c
     apps/app_wolf3d.c
-    apps/app_snake.c
     drivers/st7789.c
     drivers/buzzer.c
     drivers/joystick.c
@@ -32,8 +36,10 @@ add_executable(PhoenixOS
     modules/viewer.c
     modules/settings.c
     modules/wallpaper.c
-    modules/sound.c
     modules/sysinfo.c
+    modules/theme.c
+    modules/theme_icons.c
+    modules/sound.c
     modules/hw_config.c
 )
 

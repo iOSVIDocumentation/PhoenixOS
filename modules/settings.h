@@ -11,6 +11,7 @@ typedef struct {
     uint8_t cursor_speed;
     bool sound_enabled;
     uint16_t cpu_mhz;
+    uint8_t theme;
     char wallpaper[64];
 } settings_t;
 

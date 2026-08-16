@@ -8,9 +8,12 @@ static int last_hover = -1;
 
 static void desktop_enter(int arg) {
     (void)arg;
+    core_log("DESK_ENTER");
     last_hover = -1;
     ui_draw_desktop();
+    core_log("DESK_DRAWN");
     ui_draw_cursor(cursor_x, cursor_y);
+    core_log("DESK_DONE");
 }
 
 static void desktop_tick(const core_input_t *in, uint32_t delta_ms) {

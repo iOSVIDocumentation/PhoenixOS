@@ -6,7 +6,9 @@
 #include "hardware/spi.h"
 #include "pico/time.h"
 #include "fs_mutex.h"
+#include "ff.h"
 #include <string.h>
+#include <stdio.h>
 
 settings_t g_settings;
 
@@ -19,8 +21,18 @@ static bool last_sw = false;
 static uint32_t nav_time = 0;
 static uint32_t last_tick_ms = 0;
 
-/* Если цикл ядра зависнет дольше этого — автоматическая перезагрузка */
 #define WATCHDOG_TIMEOUT_MS 1500
+
+void core_log(const char *msg) {
+    FIL f;
+    if (f_open(&f, "/reset.log", FA_WRITE | FA_OPEN_APPEND) != FR_OK) return;
+    char line[48];
+    int n = snprintf(line, sizeof(line), "t=%lu %s\n",
+                     (unsigned long)to_ms_since_boot(get_absolute_time()), msg);
+    UINT bw = 0;
+    f_write(&f, line, n, &bw);
+    f_close(&f);
+}
 
 bool core_set_cpu_mhz(uint16_t mhz) {
     if (!set_sys_clock_khz((uint32_t)mhz * 1000, true)) return false;
@@ -33,7 +45,6 @@ static uint32_t thermal_time = 0;
 static uint32_t last_hb = 0;
 static uint8_t hb_bad = 0;
 static void thermal_guard(void) {
-    /* жив ли core1? 3 секунды без heartbeat = перезагрузка */
     uint32_t hb = g_core1_heartbeat;
     if (hb == last_hb) {
         if (++hb_bad >= 3) watchdog_reboot(0, 0, 0);
@@ -63,13 +74,13 @@ void core_register(app_id_t id, const phoenix_app_t *app) {
 
 app_id_t core_register_dyn(const phoenix_app_t *app) {
     if (app == NULL) return APP_INVALID;
-    for (int i = (int)APP_INVALID; i < CORE_MAX_APPS; i++) {
+    for (int i = (int)APP_COUNT; i < CORE_MAX_APPS; i++) {
         if (apps[i] == NULL) {
             apps[i] = app;
             return (app_id_t)i;
         }
     }
-    return APP_INVALID; /* нет мест */
+    return APP_INVALID;
 }
 
 app_id_t core_find(const char *name) {
@@ -116,11 +127,10 @@ void core_start(app_id_t initial) {
     adc_set_temp_sensor_enabled(true);
     fs_mutex_init();
 
-    /* Аппаратный сторож: завис ядра = перезагрузка */
     watchdog_enable(WATCHDOG_TIMEOUT_MS, true);
 
     if ((int)initial < 0 || (int)initial >= CORE_MAX_APPS || apps[initial] == NULL) {
-        watchdog_reboot(0, 0, 0); /* нет рабочего стола — фатал */
+        watchdog_reboot(0, 0, 0);
     }
 
     cur = initial;
@@ -130,7 +140,7 @@ void core_start(app_id_t initial) {
     last_tick_ms = to_ms_since_boot(get_absolute_time());
 
     while (true) {
-        watchdog_update(); /* кормим сторожа каждый виток */
+        watchdog_update();
 
         core_input_t in;
         core_poll_input(&in);
@@ -158,7 +168,7 @@ void core_start(app_id_t initial) {
                 in.nav_up = in.nav_down = in.nav_left = in.nav_right = false;
             }
         } else {
-            pending = APP_INVALID; /* кривой id — игнорируем, не падаем */
+            pending = APP_INVALID;
         }
 
         uint32_t now_ms = to_ms_since_boot(get_absolute_time());

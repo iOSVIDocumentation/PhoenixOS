@@ -5,8 +5,6 @@
 #include "hardware/watchdog.h"
 #include <stdio.h>
 
-/* ---------- Меню "Пуск" ---------- */
-
 static int menu_sel = 0;
 
 static void menu_enter(int arg) {
@@ -50,15 +48,16 @@ const phoenix_app_t app_menu = {
     .on_tick = menu_tick,
 };
 
-/* ---------- О системе ---------- */
-
 static void about_enter(int arg) {
     (void)arg;
+    core_log("ABOUT_IN");
     ui_draw_about_window();
+    core_log("ABOUT_DRAWN");
 }
 
 static void about_tick(const core_input_t *in, uint32_t delta_ms) {
     if (in->ok_pressed || in->back_pressed) {
+        core_log("ABOUT_EXIT");
         buzzer_click();
         core_open(APP_DESKTOP, 0);
     }

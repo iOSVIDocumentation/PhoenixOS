@@ -1,6 +1,7 @@
 #include "phoenix_core.h"
 #include "st7789.h"
 #include "buzzer.h"
+#include "theme.h"
 #include "ff.h"
 #include <string.h>
 #include <stdio.h>
@@ -15,10 +16,6 @@
 #define SN_GREEN     0x07E0
 #define SN_GREEN_LT  0x37E6
 #define SN_GREEN_DK  0x03A0
-#define SN_WALL      0x8410
-#define SN_WALL_LT   0xF7DE
-#define SN_FLOOR_B   0x0821
-#define SN_TITLE     0x0015
 
 typedef struct { uint8_t x, y; } sn_pt_t;
 
@@ -32,7 +29,7 @@ static uint32_t best[2] = {0, 0};
 static uint32_t step_ms = 160;
 static uint32_t acc_ms = 0;
 static int mode = 0;
-static int state = 0;   /* 0 меню, 1 игра, 2 game over */
+static int state = 0;
 static int menu_sel = 0;
 static uint32_t game_no = 0;
 static uint32_t rng = 123456789;
@@ -42,14 +39,12 @@ static uint32_t rnd(void) {
     return rng;
 }
 
-/* ---------- рекорды на SD ---------- */
-
 static void hi_save(void);
 
 static void hi_load(void) {
     best[0] = best[1] = 0;
     FIL f;
-    if (f_open(&f, "/snake.hi", FA_READ) != FR_OK) { hi_save(); return; } /* создаём сами */
+    if (f_open(&f, "/snake.hi", FA_READ) != FR_OK) { hi_save(); return; }
     char buf[64]; UINT br = 0;
     f_read(&f, buf, sizeof(buf) - 1, &br);
     f_close(&f);
@@ -70,18 +65,18 @@ static void hi_save(void) {
     f_close(&f);
 }
 
-/* ---------- графика ---------- */
-
 static void cell_floor(int x, int y) {
-    uint16_t c = ((x + y) & 1) ? SN_FLOOR_B : COLOR_BLACK;
+    const theme_t *T = theme_get();
+    uint16_t c = ((x + y) & 1) ? T->win_dark : COLOR_BLACK;
     st7789_fill_rect(SN_OX + x * SN_CELL, SN_OY + y * SN_CELL, SN_CELL, SN_CELL, c);
 }
 
 static void cell_wall(int x, int y) {
+    const theme_t *T = theme_get();
     int px = SN_OX + x * SN_CELL, py = SN_OY + y * SN_CELL;
-    st7789_fill_rect(px, py, 8, 8, SN_WALL);
-    st7789_fill_rect(px, py, 8, 1, SN_WALL_LT);
-    st7789_fill_rect(px, py, 1, 8, SN_WALL_LT);
+    st7789_fill_rect(px, py, 8, 8, T->win_bg);
+    st7789_fill_rect(px, py, 8, 1, T->win_light);
+    st7789_fill_rect(px, py, 1, 8, T->win_light);
     st7789_fill_rect(px, py + 7, 8, 1, COLOR_BLACK);
     st7789_fill_rect(px + 7, py, 1, 8, COLOR_BLACK);
 }
@@ -116,37 +111,39 @@ static void cell_head(int x, int y) {
 }
 
 static void hud(void) {
-    st7789_fill_rect(0, 0, 320, SN_OY - 2, COLOR_WIN_BG);
-    st7789_fill_rect(0, SN_OY - 3, 320, 1, COLOR_WHITE);
-    st7789_draw_string(4, 4, "SNAKE", COLOR_WHITE, COLOR_WIN_BG, 2);
-    st7789_draw_string(120, 10, mode ? "MAZE" : "CLASSIC", COLOR_LIGHT_BLUE, COLOR_WIN_BG, 1);
+    const theme_t *T = theme_get();
+    st7789_fill_rect(0, 0, 320, SN_OY - 2, T->taskbar);
+    st7789_fill_rect(0, SN_OY - 3, 320, 1, T->win_dark);
+    st7789_draw_string(4, 4, "SNAKE", T->taskbar_text, T->taskbar, 2);
+    st7789_draw_string(120, 10, mode ? "MAZE" : "CLASSIC", T->taskbar_text, T->taskbar, 1);
     char buf[24];
     snprintf(buf, sizeof(buf), "SCORE %lu", (unsigned long)score);
-    st7789_draw_string(316 - 8 * (int)strlen(buf), 10, buf, COLOR_LIGHT_BLUE, COLOR_WIN_BG, 1);
+    st7789_draw_string(316 - 8 * (int)strlen(buf), 10, buf, T->taskbar_text, T->taskbar, 1);
 }
 
 static void menu_draw(void) {
-    st7789_fill(COLOR_WIN_BG);
+    const theme_t *T = theme_get();
+    st7789_fill(T->desktop);
     int w = 220, h = 130, x = (320 - w) / 2, y = (216 - h) / 2;
-    st7789_fill_rect(x, y, w, h, 0xC618);
-    st7789_fill_rect(x, y, w, 1, SN_WALL_LT);
-    st7789_fill_rect(x, y, 1, h, SN_WALL_LT);
-    st7789_fill_rect(x, y + h - 1, w, 1, SN_WALL);
-    st7789_fill_rect(x + w - 1, y, 1, h, SN_WALL);
-    st7789_fill_rect(x + 3, y + 3, w - 6, 14, SN_TITLE);
-    st7789_draw_string(x + 8, y + 6, "SNAKE - choose mode", COLOR_WHITE, SN_TITLE, 1);
+    st7789_fill_rect(x, y, w, h, T->win_bg);
+    st7789_fill_rect(x, y, w, 1, T->win_light);
+    st7789_fill_rect(x, y, 1, h, T->win_light);
+    st7789_fill_rect(x, y + h - 1, w, 1, T->win_dark);
+    st7789_fill_rect(x + w - 1, y, 1, h, T->win_dark);
+    st7789_fill_rect(x + 3, y + 3, w - 6, 14, T->title);
+    st7789_draw_string(x + 8, y + 6, "SNAKE - choose mode", T->title_text, T->title, 1);
 
     const char *names[2] = { "CLASSIC", "MAZE" };
     for (int i = 0; i < 2; i++) {
         int ry = y + 30 + i * 26;
-        uint16_t bg = (i == menu_sel) ? COLOR_LIGHT_BLUE : 0xC618;
-        uint16_t fg = (i == menu_sel) ? COLOR_WHITE : COLOR_BLACK;
+        uint16_t bg = (i == menu_sel) ? T->sel_bg : T->win_bg;
+        uint16_t fg = (i == menu_sel) ? T->sel_text : T->text;
         st7789_fill_rect(x + 6, ry, w - 12, 20, bg);
         char line[40];
         snprintf(line, sizeof(line), "%s   BEST %lu", names[i], (unsigned long)best[i]);
         st7789_draw_string(x + 14, ry + 6, line, fg, bg, 1);
     }
-    st7789_draw_string(x + 40, y + h - 18, "OK-start  BACK-exit", COLOR_BLACK, 0xC618, 1);
+    st7789_draw_string(x + 40, y + h - 18, "OK-start  BACK-exit", T->text, T->win_bg, 1);
 }
 
 static void draw_field(void) {
@@ -156,8 +153,6 @@ static void draw_field(void) {
     for (int i = sn_len - 1; i >= 1; i--) cell_body(body[i].x, body[i].y);
     cell_head(body[0].x, body[0].y);
 }
-
-/* ---------- генератор лабиринтов: просторный + связный ---------- */
 
 static uint32_t flood_count(int sx, int sy) {
     static uint8_t seen[SN_ROWS][SN_COLS];
@@ -203,12 +198,10 @@ static void maze_gen(int cx, int cy) {
         for (int y = 0; y < SN_ROWS; y++)
             for (int x = 0; x < SN_COLS; x++)
                 open += !maze[y][x];
-        if (flood_count(cx, cy) == open) return; /* замкнутых зон нет */
+        if (flood_count(cx, cy) == open) return;
     }
-    memset(maze, 0, sizeof(maze)); /* страховка */
+    memset(maze, 0, sizeof(maze));
 }
-
-/* ---------- логика ---------- */
 
 static void food_place(void) {
     while (1) {
@@ -225,21 +218,25 @@ static void food_place(void) {
 }
 
 static void die(void) {
+    const theme_t *T = theme_get();
     state = 2;
     buzzer_error();
     bool record = score > best[mode];
     if (record) { best[mode] = score; hi_save(); }
     int w = 200, h = 76, x = (320 - w) / 2, y = (216 - h) / 2;
-    st7789_fill_rect(x, y, w, h, COLOR_WIN_BG);
-    st7789_draw_rect(x, y, w, h, COLOR_WHITE);
-    st7789_fill_rect(x + 3, y + 3, w - 6, 14, SN_TITLE);
-    st7789_draw_string(x + 70, y + 6, "GAME OVER", COLOR_WHITE, SN_TITLE, 1);
+    st7789_fill_rect(x, y, w, h, T->win_bg);
+    st7789_fill_rect(x, y, w, 1, T->win_light);
+    st7789_fill_rect(x, y, 1, h, T->win_light);
+    st7789_fill_rect(x, y + h - 1, w, 1, T->win_dark);
+    st7789_fill_rect(x + w - 1, y, 1, h, T->win_dark);
+    st7789_fill_rect(x + 3, y + 3, w - 6, 14, T->title);
+    st7789_draw_string(x + 70, y + 6, "GAME OVER", T->title_text, T->title, 1);
     char buf[40];
     snprintf(buf, sizeof(buf), "SCORE %lu   BEST %lu", (unsigned long)score, (unsigned long)best[mode]);
-    st7789_draw_string(x + 30, y + 26, buf, COLOR_WHITE, COLOR_WIN_BG, 1);
+    st7789_draw_string(x + 30, y + 26, buf, T->text, T->win_bg, 1);
     if (record)
-        st7789_draw_string(x + 60, y + 40, "*** NEW RECORD! ***", COLOR_YELLOW, COLOR_WIN_BG, 1);
-    st7789_draw_string(x + 40, y + 56, "OK-retry  BACK-menu", COLOR_LIGHT_BLUE, COLOR_WIN_BG, 1);
+        st7789_draw_string(x + 60, y + 40, "*** NEW RECORD! ***", COLOR_YELLOW, T->win_bg, 1);
+    st7789_draw_string(x + 40, y + 56, "OK-retry  BACK-games", T->text, T->win_bg, 1);
 }
 
 static void game_start(int m) {
@@ -270,7 +267,6 @@ static void game_start(int m) {
 static void step(void) {
     int nx = body[0].x + dir_x, ny = body[0].y + dir_y;
     if (nx < 0 || nx >= SN_COLS || ny < 0 || ny >= SN_ROWS || maze[ny][nx]) { die(); return; }
-    /* зона поедания: фрукт + 1 клетка вокруг (включая диагонали) */
     int ddx = nx - food.x, ddy = ny - food.y;
     if (ddx < 0) ddx = -ddx;
     if (ddy < 0) ddy = -ddy;
@@ -312,8 +308,8 @@ static void snake_exit(void) {}
 static void snake_tick(const core_input_t *in, uint32_t delta_ms) {
     if (in->back_pressed) {
         buzzer_click();
-        if (state == 0) {
-            core_open(APP_DESKTOP, 0);
+        if (state == 0 || state == 2) {
+            core_open(core_find("games"), 0);
         } else {
             state = 0;
             menu_draw();

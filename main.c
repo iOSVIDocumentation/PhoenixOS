@@ -7,27 +7,26 @@
 #include "joystick.h"
 #include "buttons.h"
 #include "settings.h"
+#include "theme.h"
+#include "theme_icons.h"
+#include "provision.h"
 #include "ui.h"
 #include "phoenix_core.h"
+#include "hardware/watchdog.h"
 #include "sysinfo.h"
-#include "hardware/clocks.h"
 
 extern const phoenix_app_t app_snake;
+extern const phoenix_app_t app_games;
+extern const phoenix_app_t app_tetris;
+extern app_id_t g_games_snake_id;
+extern app_id_t g_games_tetris_id;
 
 static bool safe_mode = false;
 
-static void draw_bootscreen(void) {
-    st7789_fill(COLOR_WIN_BG);
-    st7789_draw_rect(10, 10, 300, 220, COLOR_WHITE);
-    st7789_draw_rect(12, 12, 296, 216, COLOR_LIGHT_BLUE);
-    st7789_draw_string(80, 45, "PhoenixOS", COLOR_WHITE, COLOR_WIN_BG, 3);
-    st7789_draw_string(72, 80, "Retro Workstation v0.9.3", COLOR_LIGHT_BLUE, COLOR_WIN_BG, 1);
-    st7789_draw_string(104, 95, "Kernel Edition", COLOR_LIGHT_BLUE, COLOR_WIN_BG, 1);
-    st7789_draw_string(68, 110, "RP2350 (ARM Cortex-M33)", COLOR_DARK_GRAY, COLOR_WIN_BG, 1);
-    if (safe_mode) {
-        st7789_draw_string(60, 140, "SAFE MODE: settings reset", COLOR_RED, COLOR_WIN_BG, 1);
-    }
-    st7789_draw_string(45, 185, "Mounting SD (FAT32)...", COLOR_WHITE, COLOR_WIN_BG, 1);
+static const char *reset_reason_str(void) {
+    if (watchdog_enable_caused_reboot()) return "LAST: WDT TIMEOUT";
+    if (watchdog_caused_reboot())        return "LAST: WDT REBOOT";
+    return "LAST: POWER ON";
 }
 
 int main(void) {
@@ -41,35 +40,51 @@ int main(void) {
     safe_mode = button_is_pressed(BTN_BACK);
 
     buzzer_startup();
-    draw_bootscreen();
+    ui_draw_bootscreen(safe_mode, -1);
+    st7789_draw_string(45, 200, reset_reason_str(), COLOR_YELLOW, COLOR_WIN_BG, 1);
 
     sd_card_t *pSD = sd_get_by_num(0);
     static FATFS fs;
     FRESULT fr = f_mount(&fs, pSD->pcName, 1);
     if (fr == FR_OK) {
-        st7789_draw_string(45, 185, "SD Card Mounted! OK      ", COLOR_GREEN, COLOR_WIN_BG, 1);
+        provision_sd_card();
+
+        /* журнал причин перезагрузки */
+        FIL lf;
+        if (f_open(&lf, "/reset.log", FA_WRITE | FA_OPEN_APPEND) == FR_OK) {
+            char line[64];
+            int n = snprintf(line, sizeof(line), "t=%lu %s\n",
+                             (unsigned long)to_ms_since_boot(get_absolute_time()),
+                             watchdog_enable_caused_reboot() ? "WDT_TIMEOUT" :
+                             watchdog_caused_reboot() ? "WDT_REBOOT" : "POWER_ON");
+            UINT bw = 0;
+            f_write(&lf, line, n, &bw);
+            f_close(&lf);
+        }
+        st7789_draw_string(45, 192, "Scanning SD free space...", COLOR_YELLOW, COLOR_WIN_BG, 1);
+        sysinfo_sd_scan();
         buzzer_success();
     } else {
-        st7789_draw_string(45, 185, "SD Card Mount Failed!    ", COLOR_RED, COLOR_WIN_BG, 1);
         buzzer_error();
     }
 
     settings_load(&g_settings);
     if (safe_mode) {
         g_settings.cpu_mhz = 150;
+        g_settings.theme = THEME_PHOENIX;
         settings_save(&g_settings);
     }
     settings_apply(&g_settings);
+    theme_icons_load(g_settings.theme);
     ui_set_wallpaper(g_settings.wallpaper);
+    ui_draw_bootscreen(safe_mode, (fr == FR_OK) ? 1 : 0);
+    st7789_draw_string(45, 200, reset_reason_str(), COLOR_YELLOW, COLOR_WIN_BG, 1);
 
     if (!safe_mode && g_settings.cpu_mhz != 150) {
         if (!core_set_cpu_mhz(g_settings.cpu_mhz)) {
             g_settings.cpu_mhz = 150;
         }
     }
-    printf("[PhoenixOS] cpu: target=%u MHz, actual=%u MHz\n",
-           (unsigned)g_settings.cpu_mhz,
-           (unsigned)(clock_get_hz(clk_sys) / 1000000));
 
     sleep_ms(1500);
 
@@ -83,7 +98,10 @@ int main(void) {
     core_register(APP_CPU,       &app_cpu);
     core_register(APP_MEDIA,     &app_media);
     core_register(APP_WOLF3D,    &app_wolf3d);
-    core_register(APP_SNAKE, &app_snake);
+
+    core_register(APP_SNAKE,     &app_games);
+    g_games_snake_id  = core_register_dyn(&app_snake);
+    g_games_tetris_id = core_register_dyn(&app_tetris);
 
     core_start(APP_DESKTOP);
     return 0;
