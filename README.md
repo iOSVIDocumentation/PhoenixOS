@@ -77,34 +77,50 @@ Pico leg numbers assume USB up (left column 1–20 top-down, right column
 <details>
 <summary>📌 <b>Pinout — who connects where (open table)</b></summary>
 
-| Module | Pin on module | Pico leg | GPIO | Notes |
+**Display module 2.4" TFT SPI 240x320 v1.3 - main header, pin order as silkscreened
+("SPI" is a side marking, not a pin). 8 pins connected, touch pins unused:**
+
+| # | Module pin (silkscreen) | Pico leg | GPIO | Status |
 |---|---|---|---|---|
-| **Display — 8 connected pins** | VCC | 36 | 3V3 | power |
-| | GND | 38 | GND | ground |
-| | SCK | 24 | GP18 | SPI0 clock |
-| | SDI (MOSI) | 25 | GP19 | SPI0 data |
-| | RESET | 26 | GP20 | reset |
-| | DC | 21 | GP16 | data/command |
-| | CS | 22 | GP17 | chip select |
-| | LED | 27 | GP21 | backlight, PWM |
-| **Display — not connected** | SDO (MISO) | — | — | unused |
-| | T_CLK / T_CS / T_DIN / T_DO / T_IRQ | — | — | touch unused |
-| **SD slot (on the module)** | SD_SCK | 14 | GP10 | SPI1 clock |
-| | SD_MOSI | 15 | GP11 | data to card |
-| | SD_MISO | 16 | GP12 | data from card |
-| | SD_CS | 17 | GP13 | card select |
-| | power | — | — | soldered on the board |
-| **Joystick** | VCC | 36 | 3V3 | |
+| 1 | VCC | 36 | 3V3 | connected |
+| 2 | GND | 38 | GND | connected |
+| 3 | CS | 22 | GP17 | connected |
+| 4 | RESET | 26 | GP20 | connected |
+| 5 | DC | 21 | GP16 | connected |
+| 6 | SDI (MOSI) | 25 | GP19 | connected |
+| 7 | SCK | 24 | GP18 | connected |
+| 8 | LED | 27 | GP21 | connected, PWM backlight |
+| 9 | SDO (MISO) | - | - | NOT connected |
+| 10 | T_CLK | - | - | NOT connected (touch) |
+| 11 | T_CS | - | - | NOT connected (touch) |
+| 12 | T_DIN | - | - | NOT connected (touch) |
+| 13 | T_DO | - | - | NOT connected (touch) |
+| 14 | T_IRQ | - | - | NOT connected (touch) |
+
+**SD slot on the same module (silkscreen at the bottom):**
+
+| Module pin | Pico leg | GPIO | Status |
+|---|---|---|---|
+| SD_SCK | 14 | GP10 | connected |
+| SD_MOSI | 15 | GP11 | connected |
+| SD_MISO | 16 | GP12 | connected |
+| SD_CS | 17 | GP13 | connected |
+
+**Other modules:**
+
+| Module | Pin | Pico leg | GPIO | Notes |
+|---|---|---|---|---|
+| Joystick | VCC | 36 | 3V3 | |
 | | GND | 23 | GND | |
-| | VRx | 31 | GP26 | ADC0, analog X |
-| | VRy | 32 | GP27 | ADC1, analog Y |
+| | VRx | 31 | GP26 | ADC0 |
+| | VRy | 32 | GP27 | ADC1 |
 | | SW | 7 | GP5 | press switch |
-| **Buttons** | MENU | 4 | GP2 | second pin = GND |
+| Buttons | MENU | 4 | GP2 | second pin = GND |
 | | OK | 5 | GP3 | second pin = GND |
 | | BACK | 6 | GP4 | second pin = GND |
-| **Buzzer** | + | 10 | GP7 | PWM output |
-| | − | — | GND | |
-| **Power** | +5V | 39 | VSYS | or USB |
+| Buzzer | + | 10 | GP7 | PWM |
+| | - | - | GND | |
+| Power | +5V | 39 | VSYS | or USB |
 | | GND | 38 | GND | common ground |
 
 Full wiring notes: `PINOUT.md`.
