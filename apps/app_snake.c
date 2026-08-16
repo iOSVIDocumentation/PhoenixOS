@@ -66,8 +66,8 @@ static void hi_save(void) {
 }
 
 static void cell_floor(int x, int y) {
-    const theme_t *T = theme_get();
-    uint16_t c = ((x + y) & 1) ? T->win_dark : COLOR_BLACK;
+
+    uint16_t c = COLOR_BLACK; /* поле полностью чёрное */
     st7789_fill_rect(SN_OX + x * SN_CELL, SN_OY + y * SN_CELL, SN_CELL, SN_CELL, c);
 }
 

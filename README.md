@@ -1,6 +1,6 @@
 # PhoenixOS
 
-[![Version](https://img.shields.io/badge/version-v0.9.6-blue)](../../releases)
+[![Version](https://img.shields.io/badge/version-v0.9.7-blue)](../../releases)
 [![MCU](https://img.shields.io/badge/MCU-RP2350%20%7C%20dual%20Cortex--M33-green)](https://www.raspberrypi.com/products/rp2350/)
 [![Language](https://img.shields.io/badge/language-C99-orange)]()
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue)](#license)
@@ -16,6 +16,7 @@ flash one UF2 file and get a tiny desktop computer.
 
 **Contents**
 
+- [What's New in v0.9.7](#whats-new-in-v097)
 - [What's New in v0.9.6](#whats-new-in-v096)
 - [Feature Highlights](#feature-highlights)
 - [Hardware & Pinout](#hardware--pinout)
@@ -28,6 +29,11 @@ flash one UF2 file and get a tiny desktop computer.
 - [License](#license)
 
 ---
+
+## What's New in v0.9.7
+
+- Snake: the playing field is now **fully black** - no checkerboard
+  glare; maze walls remain clearly visible.
 
 ## What's New in v0.9.6
 
@@ -211,7 +217,10 @@ Hold **BOOTSEL**, plug the board in, copy `build/PhoenixOS.uf2` to the
 ## Changelog
 
 <details>
-<summary>🕰️ <b>v0.9.6 / v0.9.5 / v0.9.3 (open)</b></summary>
+<summary>🕰️ <b>v0.9.7 / v0.9.6 / v0.9.5 / v0.9.3 (open)</b></summary>
+
+### v0.9.7
+- Snake field fully black; maze walls unchanged.
 
 ### v0.9.6
 - Exact pinout table matching the real module silkscreen
