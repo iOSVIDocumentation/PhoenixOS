@@ -3,7 +3,7 @@
 [![Version](https://img.shields.io/badge/version-v0.9.6-blue)](../../releases)
 [![MCU](https://img.shields.io/badge/MCU-RP2350%20%7C%20dual%20Cortex--M33-green)](https://www.raspberrypi.com/products/rp2350/)
 [![Language](https://img.shields.io/badge/language-C99-orange)]()
-[![License](https://img.shields.io/badge/license-MIT-lightgrey)](#license)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue)](#license)
 
 **A retro-style workstation OS for the Raspberry Pi Pico 2.**
 Windows, themes, games, a media player and a file manager on a $6 board —
@@ -213,7 +213,18 @@ Hold **BOOTSEL**, plug the board in, copy `build/PhoenixOS.uf2` to the
 
 ## License
 
-PhoenixOS is open-source software released under the **MIT License** —
+PhoenixOS is open-source software released under the **Apache License, Version 2.0** —
 see the [LICENSE](LICENSE) file.
 
-Copyright (c) 2026 iOSVIDocumentation (PhoenixOS project).
+Copyright 2026 iOSVIDocumentation (PhoenixOS project).
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this work except in compliance with the License.
+You may obtain a copy of the License at
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+implied. See the License for the specific language governing
+permissions and limitations under the License.
