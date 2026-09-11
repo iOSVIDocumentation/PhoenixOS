@@ -286,7 +286,16 @@ Hold **BOOTSEL**, plug the board in, copy `build/PhoenixOS.uf2` to the
 ## Changelog
 
 <details>
-<summary>🕰️ <b>v0.9.7 / v0.9.6 / v0.9.5 / v0.9.3 (open)</b></summary>
+<summary>🕰️ <b>v0.9.8 / v0.9.7 / v0.9.6 / v0.9.5 / v0.9.3 (open)</b></summary>
+
+### v0.9.8
+
+- Stability & safety pass: 18 surgical fixes after a full source audit (kernel, drivers, apps, build system).
+- RP2350 FatFs compatibility patch + tools/apply_patches.sh; build instructions added to README.
+- Cursor: subpixel frame-rate-independent movement; joystick SW pin debounce 20 ms.
+- Sound: UI clicks keep priority during PVX playback (ducking); snd_success() non-blocking.
+- Dead code removed: Wolf3D raycaster app, snd_shoot(), sd_card.c.
+- Full list: see "What's New in v0.9.8" above.
 
 ### v0.9.7
 - Snake field fully black; maze walls unchanged.
