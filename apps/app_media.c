@@ -216,9 +216,11 @@ static bool media_start(void) {
     multicore_fifo_push_blocking((uint32_t)play_path);
     uint32_t ok = multicore_fifo_pop_blocking();
     multicore_fifo_pop_blocking(); /* w|h */
-    pv_fps = (uint16_t)multicore_fifo_pop_blocking();
-    pv_frames = multicore_fifo_pop_blocking();
+    uint32_t tmp_fps = multicore_fifo_pop_blocking();
+    uint32_t tmp_frames = multicore_fifo_pop_blocking();
     if (!ok) return false;
+    pv_fps = (uint16_t)tmp_fps;
+    pv_frames = tmp_frames;
 
     spi_set_baudrate(spi0, MV_LCD_HZ);
     st7789_display_on();

@@ -337,7 +337,8 @@ static void render_icon_be(int theme_id, int icon_id, uint8_t *dst) {
 
 void theme_icons_provision(void) {
     static const char *names[THEME_COUNT] = {"phoenix", "xp", "macos"};
-    static uint8_t buf[ICON_FILE_SIZE];
+    static uint8_t buf[ICON_FILE_SIZE]; /* 10240 bytes - OK for RP2350 520KB SRAM */
+    int saved_theme = theme_id();
 
     for (int t = 0; t < THEME_COUNT; t++) {
         char path[64];
@@ -355,5 +356,6 @@ void theme_icons_provision(void) {
         f_write(&f, buf, ICON_FILE_SIZE, &bw);
         f_close(&f);
     }
+    theme_set(saved_theme);
     (void)art_sets;
 }
