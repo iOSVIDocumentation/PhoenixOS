@@ -183,11 +183,11 @@ static void draw_label(int i) {
             for (int j = 0; j < 8; j++) {
                 int col = c * 8 + j;
                 if (col >= w) break;
-                if ((sb & (0x80 >> j)) && (col + 1 < w)) {
+                if ((sb & (0x80 >> j)) && (col + 1 < w) && (col + 1 < 64)) {
                     label_buf[2 * (col + 1)]     = 0x00;
                     label_buf[2 * (col + 1) + 1] = 0x00;
                 }
-                if (wb & (0x80 >> j)) {
+                if ((wb & (0x80 >> j)) && (col < 64)) {
                     label_buf[2 * col]     = 0xFF;
                     label_buf[2 * col + 1] = 0xFF;
                 }
@@ -346,7 +346,7 @@ void ui_draw_about_window(void) {
     {
         char sd[40];
         uint32_t total_kb, free_kb;
-        core_log("SDKB_PRE"); sysinfo_sd_kb(&total_kb, &free_kb); core_log("SDKB_POST");
+        sysinfo_sd_kb(&total_kb, &free_kb);
         if (total_kb > 0) {
             snprintf(sd, sizeof(sd), "SD: %lu/%lu MB", (unsigned long)(free_kb / 1024), (unsigned long)(total_kb / 1024));
         } else {
