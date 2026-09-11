@@ -13,6 +13,7 @@ static snd_req_t q[SND_Q_SIZE];
 static volatile int q_head = 0, q_tail = 0;
 static mutex_t q_mutex;
 static volatile bool enabled = true;
+static uint32_t ui_duck_until = 0;
 static bool initialized = false;
 
 /* ---- состояние движка (только core1) ---- */
@@ -63,6 +64,7 @@ static void hw_on(uint16_t freq) {
         div <<= 1;
         wrap = clk / ((uint32_t)freq * div);
     }
+    if (wrap > 65535) wrap = 65535;
     if (wrap == 0) wrap = 1;
     uint slice = pwm_gpio_to_slice_num(PIN_BUZZER);
     pwm_config cfg = pwm_get_default_config();
@@ -92,9 +94,24 @@ void sound_svc_core1_tick(bool movie_active) {
 
     /* видео играет — UI-звуки глушим (приоритет) */
     if (movie_active) {
-        mutex_enter_blocking(&q_mutex);
-        q_head = q_tail = 0;
-        mutex_exit(&q_mutex);
+        if (!playing) {
+            snd_req_t r;
+            mutex_enter_blocking(&q_mutex);
+            bool has = q_pop(&r);
+            mutex_exit(&q_mutex);
+            if (has) {
+                if (enabled && r.freq) {
+                    hw_on(r.freq);
+                    playing = true;
+                    tone_end = (r.dur == 0) ? now + 80 : now + r.dur;
+                    ui_duck_until = tone_end;
+                } else {
+                    hw_off();
+                    playing = false;
+                    ui_duck_until = 0;
+                }
+            }
+        }
         return;
     }
 
@@ -118,6 +135,7 @@ void sound_svc_core1_tick(bool movie_active) {
 
 void sound_svc_movie_note(uint16_t f, uint16_t d) {
     uint32_t now = to_ms_since_boot(get_absolute_time());
+    if ((int32_t)(now - ui_duck_until) < 0) return; /* UI sound priority */
     if (enabled && f) hw_on(f); else hw_off();
     cur_freq = f;
     playing = true;

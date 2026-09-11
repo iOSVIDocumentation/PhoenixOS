@@ -16,12 +16,13 @@ static bool file_exists(const char *path) {
     return (f_stat(path, &fi) == FR_OK);
 }
 
-static void create_file(const char *path, const char *content) {
+static bool create_file(const char *path, const char *content) {
     FIL f;
-    if (f_open(&f, path, FA_WRITE | FA_CREATE_ALWAYS) != FR_OK) return;
+    if (f_open(&f, path, FA_WRITE | FA_CREATE_ALWAYS) != FR_OK) return false;
     UINT bw = 0;
-    f_write(&f, content, (UINT)strlen(content), &bw);
+    FRESULT fr = f_write(&f, content, (UINT)strlen(content), &bw);
     f_close(&f);
+    return (fr == FR_OK && bw == (UINT)strlen(content));
 }
 
 void provision_sd_card(void) {

@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include "hardware/adc.h"
 #include "pico/stdlib.h"
 #include "st7789.h"
 #include "ff.h"
@@ -34,6 +35,7 @@ int main(void) {
 
     st7789_init();
     buzzer_init();
+    adc_init();
     joystick_init();
     buttons_init();
     media_core1_init();
