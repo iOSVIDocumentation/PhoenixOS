@@ -35,7 +35,9 @@ static void set_change(settings_t *s, int row, int dir) {
             int t = (s->theme + dir + THEME_COUNT) % THEME_COUNT;
             s->theme = (uint8_t)t;
             theme_set(t);
-            theme_icons_load(t);
+            if (!theme_icons_load(t)) {
+                buzzer_error();
+            }
             break;
         }
         default:
