@@ -5,11 +5,13 @@
 static int cursor_x = 160;
 static int cursor_y = 100;
 static int last_hover = -1;
+static int32_t cursor_frac_x = 0, cursor_frac_y = 0;
 
 static void desktop_enter(int arg) {
     (void)arg;
     core_log("DESK_ENTER");
     last_hover = -1;
+    cursor_frac_x = cursor_frac_y = 0;
     ui_draw_desktop();
     core_log("DESK_DRAWN");
     ui_draw_cursor(cursor_x, cursor_y);
@@ -18,9 +20,15 @@ static void desktop_enter(int arg) {
 
 static void desktop_tick(const core_input_t *in, uint32_t delta_ms) {
     int speed = g_settings.cursor_speed;
+    cursor_frac_x += in->dx * speed * 70 * (int32_t)delta_ms;
+    cursor_frac_y += in->dy * speed * 70 * (int32_t)delta_ms;
+    int move_x = cursor_frac_x / 1000;
+    int move_y = cursor_frac_y / 1000;
+    cursor_frac_x -= move_x * 1000;
+    cursor_frac_y -= move_y * 1000;
 
-    int new_x = cursor_x + in->dx * speed;
-    int new_y = cursor_y + in->dy * speed;
+    int new_x = cursor_x + move_x;
+    int new_y = cursor_y + move_y;
     if (new_x < 0) new_x = 0;
     if (new_x > 320 - UI_CURSOR_W) new_x = 320 - UI_CURSOR_W;
     if (new_y < 0) new_y = 0;
