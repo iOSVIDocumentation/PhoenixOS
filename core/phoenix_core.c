@@ -26,7 +26,7 @@ static uint32_t last_tick_ms = 0;
 void core_log(const char *msg) {
     FIL f;
     if (f_open(&f, "/reset.log", FA_WRITE | FA_OPEN_APPEND) != FR_OK) return;
-    char line[48];
+    char line[128];
     int n = snprintf(line, sizeof(line), "t=%lu %s\n",
                      (unsigned long)to_ms_since_boot(get_absolute_time()), msg);
     UINT bw = 0;
@@ -124,6 +124,7 @@ static void core_poll_input(core_input_t *in) {
 }
 
 void core_start(app_id_t initial) {
+    adc_init();
     adc_set_temp_sensor_enabled(true);
     fs_mutex_init();
 
@@ -177,6 +178,6 @@ void core_start(app_id_t initial) {
         last_tick_ms = now_ms;
 
         apps[cur]->on_tick(&in, delta_ms);
-        sleep_ms(10);
+        sleep_until(last_tick_ms * 1000);
     }
 }
