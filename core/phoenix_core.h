@@ -18,7 +18,6 @@ typedef enum {
     APP_WALLPAPER,
     APP_CPU,
     APP_MEDIA,
-    APP_WOLF3D,
     APP_COUNT
 } app_id_t;
 
@@ -75,6 +74,5 @@ extern const phoenix_app_t app_settings;
 extern const phoenix_app_t app_wallpaper;
 extern const phoenix_app_t app_cpu;
 extern const phoenix_app_t app_media;
-extern const phoenix_app_t app_wolf3d;
 
 #endif // PHOENIX_CORE_H

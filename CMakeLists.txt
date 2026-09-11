@@ -26,7 +26,6 @@ add_executable(PhoenixOS
     apps/app_viewer.c
     apps/app_settings.c
     apps/app_media.c
-    apps/app_wolf3d.c
     drivers/st7789.c
     drivers/buzzer.c
     drivers/joystick.c

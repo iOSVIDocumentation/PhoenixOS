@@ -54,9 +54,6 @@ static void desktop_tick(const core_input_t *in, uint32_t delta_ms) {
             buzzer_click();
             media_open_path("");
             core_open(APP_MEDIA, 0);
-        } else if (last_hover != -1) {
-            buzzer_click();
-            core_open(APP_WOLF3D, 0);
         }
     }
 }

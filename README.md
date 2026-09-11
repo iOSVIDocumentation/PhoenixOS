@@ -66,7 +66,7 @@ flash one UF2 file and get a tiny desktop computer.
   - *IPC:* multicore FIFO (media), lock-free queue (sound), FatFs mutex.
 - **Apps:** desktop with cursor & icons, Start menu, file manager, viewer,
   control panel, wallpaper picker, CPU manager, system monitor, PVX media
-  player, Snake, Tetris, Wolfenstein-style 3D demo.
+  player, Snake and Tetris.
 - **Safety:** watchdog, core-1 heartbeat supervision, thermal rollback to
   150 MHz, safe mode (hold BACK at power-on).
 - **Performance:** stock 150 MHz or overclock 200 / 225 / 250 MHz,
@@ -182,7 +182,7 @@ Full wiring notes: `PINOUT.md`.
     core/          kernel: registry, main loop, watchdog, heartbeat,
                    FatFs mutex, sound service, SD provisioning
     apps/          desktop, start menu, files, viewer, settings,
-                   wallpaper, cpu, media, snake, tetris, wolf3d,
+                   wallpaper, cpu, media, snake, tetris,
                    games menu
     drivers/       board.h (single source of truth for pins),
                    st7789, buzzer, joystick, buttons

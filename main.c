@@ -97,7 +97,6 @@ int main(void) {
     core_register(APP_WALLPAPER, &app_wallpaper);
     core_register(APP_CPU,       &app_cpu);
     core_register(APP_MEDIA,     &app_media);
-    core_register(APP_WOLF3D,    &app_wolf3d);
 
     core_register(APP_SNAKE,     &app_games);
     g_games_snake_id  = core_register_dyn(&app_snake);
