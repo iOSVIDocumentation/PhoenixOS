@@ -31,6 +31,34 @@ flash one UF2 file and get a tiny desktop computer.
 
 ---
 
+## Building from source
+
+### 1. Clone with submodules
+
+```bash
+git clone --recursive https://github.com/iOSVIDocumentation/PhoenixOS.git
+cd PhoenixOS
+```
+
+### 2. Apply RP2350 compatibility patches
+
+Upstream FatFs targets RP2040 and pulls in hardware RTC, which RP2350 does not have.
+Apply the bundled patch once after cloning:
+
+```bash
+./tools/apply_patches.sh
+```
+
+### 3. Build
+
+```bash
+mkdir -p build && cd build
+cmake ..
+make -j$(nproc)
+```
+
+Firmware: build/PhoenixOS.uf2
+
 ## What's New in v0.9.8
 
 **Stability & safety pass** — surgical fixes across the kernel, drivers and apps after a full source audit.
