@@ -97,6 +97,8 @@ static void cell_body(int x, int y) {
     st7789_fill_rect(px + 1, py + 6, 6, 1, SN_GREEN_DK);
 }
 
+static void die(void);
+
 static void cell_head(int x, int y) {
     int px = SN_OX + x * SN_CELL, py = SN_OY + y * SN_CELL;
     st7789_fill_rect(px, py, 8, 8, SN_GREEN);
@@ -204,17 +206,20 @@ static void maze_gen(int cx, int cy) {
 }
 
 static void food_place(void) {
-    while (1) {
+    if (sn_len >= SN_MAXLEN) { die(); return; }  // WIN condition
+    int attempts = 0;
+    while (attempts < 1000) {
         int x = (int)(rnd() % SN_COLS), y = (int)(rnd() % SN_ROWS);
-        if (maze[y][x]) continue;
+        if (maze[y][x]) { attempts++; continue; }
         bool on = false;
         for (int i = 0; i < sn_len; i++)
             if (body[i].x == x && body[i].y == y) { on = true; break; }
-        if (on) continue;
+        if (on) { attempts++; continue; }
         food.x = (uint8_t)x; food.y = (uint8_t)y;
         cell_fruit(x, y);
         return;
     }
+    die();  // fallback: если не нашли свободную клетку за 1000 попыток
 }
 
 static void die(void) {

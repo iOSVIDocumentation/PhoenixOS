@@ -12,7 +12,6 @@ add_subdirectory(fatfs_lib/FatFs_SPI fatfs_build)
 
 add_executable(PhoenixOS
     main.c
-    sd_card.c
     core/phoenix_core.c
     core/fs_mutex.c
     core/sound_svc.c
