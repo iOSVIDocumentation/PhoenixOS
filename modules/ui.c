@@ -63,7 +63,7 @@ void ui_draw_bootscreen(bool safe_mode, int mount_state) {
     st7789_fill_rect(x, y + h - 1, w, 1, T->win_dark);
     st7789_fill_rect(x + w - 1, y, 1, h, T->win_dark);
     draw_title_bar(x + 2, y + 2, w - 4, "PhoenixOS");
-    st7789_draw_string(72, 80, "Retro Workstation v0.9", T->text, T->win_bg, 1);
+    st7789_draw_string(72, 80, "Retro Workstation v0.9.8", T->text, T->win_bg, 1);
     st7789_draw_string(104, 95, "Kernel Edition", T->text, T->win_bg, 1);
     st7789_draw_string(68, 110, "RP2350 (ARM Cortex-M33)", COLOR_DARK_GRAY, T->win_bg, 1);
     if (safe_mode) {
@@ -326,7 +326,7 @@ void ui_draw_about_window(void) {
     st7789_fill_rect(x, y + h - 1, w, 1, T->win_dark);
     st7789_fill_rect(x + w - 1, y, 1, h, T->win_dark);
 
-    draw_title_bar(x + 3, y + 3, w - 6, "About PhoenixOS v0.9.7");
+    draw_title_bar(x + 3, y + 3, w - 6, "About PhoenixOS v0.9.8");
 
     int ty = y + 24;
     st7789_draw_string(x + 8, ty, "MCU: RP2350 M33 x2", T->text, T->win_bg, 1);

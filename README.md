@@ -1,6 +1,6 @@
 # PhoenixOS
 
-[![Version](https://img.shields.io/badge/version-v0.9.7-blue)](../../releases)
+[![Version](https://img.shields.io/badge/version-v0.9.8-blue)](../../releases)
 [![MCU](https://img.shields.io/badge/MCU-RP2350%20%7C%20dual%20Cortex--M33-green)](https://www.raspberrypi.com/products/rp2350/)
 [![Language](https://img.shields.io/badge/language-C99-orange)]()
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue)](#license)
@@ -16,6 +16,7 @@ flash one UF2 file and get a tiny desktop computer.
 
 **Contents**
 
+- [What's New in v0.9.8](#whats-new-in-v098)
 - [What's New in v0.9.7](#whats-new-in-v097)
 - [What's New in v0.9.6](#whats-new-in-v096)
 - [Feature Highlights](#feature-highlights)
@@ -29,6 +30,37 @@ flash one UF2 file and get a tiny desktop computer.
 - [License](#license)
 
 ---
+
+## What's New in v0.9.8
+
+**Stability & safety pass** — surgical fixes across the kernel, drivers and apps after a full source audit.
+
+### Kernel & Core
+- Explicit `adc_init()` in both `main.c` and `core_start()` — thermal guard no longer depends on driver init order.
+- `core_log()` buffer enlarged to 128 bytes — prevents silent truncation on long messages.
+- Main loop now uses `sleep_until()` for a stable 100 Hz tick instead of a flat `sleep_ms(10)`.
+- PWM wrap clamped to 65535 — prevents garbage values on sub-9 Hz buzzer tones.
+- **UI-sound priority with movie ducking**: button clicks now play cleanly even during PVX movie playback (previous behaviour silently dropped them).
+
+### Storage
+- `provision.c` now verifies the written byte count — prevents silent creation of 0-byte config files on full SD cards.
+- Removed dead `sd_card.c` (unused, was occupying SRAM).
+
+### Drivers
+- **Joystick SW pin**: added 20 ms software debounce — eliminates spurious multi-clicks from mechanical bounce.
+- `snd_success()` made non-blocking.
+
+### Apps
+- `app_snake.c`: `food_place()` now has a 1000-iteration limit and a `die()` fallback — prevents an infinite loop if the board somehow gets fully filled.
+- `app_settings.c`: theme switch now beeps an error if `theme_icons_load()` fails (corrupted/missing file).
+- `theme_icons_provision()` now saves and restores the current theme (was leaving the system in Mac OS theme after first-boot).
+- `app_media.c`: `pv_fps` is only assigned after PVX header validation succeeds.
+- About window: removed leftover debug `core_log()` calls that were polluting `reset.log`.
+
+### Cleanup
+- Removed unused `Wolf3D` raycaster app and its `APP_WOLF3D` enum slot (was dead code, had potential out-of-bounds map access).
+- Removed dead `snd_shoot()` function (only used by Wolf3D).
+- Removed stray debug logs from About window.
 
 ## What's New in v0.9.7
 
