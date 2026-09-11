@@ -31,6 +31,15 @@ flash one UF2 file and get a tiny desktop computer.
 
 ---
 
+## Download
+
+| Asset | Link |
+| --- | --- |
+| Firmware (UF2, flash-ready) | https://github.com/iOSVIDocumentation/PhoenixOS/releases/latest/download/PhoenixOS.uf2 |
+| Full source code (ZIP, v0.9.8) | https://github.com/iOSVIDocumentation/PhoenixOS/archive/refs/tags/v0.9.8.zip |
+| Full source code (ZIP, main branch) | https://github.com/iOSVIDocumentation/PhoenixOS/archive/refs/heads/main.zip |
+| All releases | https://github.com/iOSVIDocumentation/PhoenixOS/releases |
+
 ## Building from source
 
 ### 1. Clone with submodules
