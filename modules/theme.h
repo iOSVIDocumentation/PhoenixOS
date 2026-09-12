@@ -4,10 +4,11 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define THEME_COUNT 3
+#define THEME_COUNT 4
 #define THEME_PHOENIX 0
 #define THEME_WINXP   1
 #define THEME_MACOS   2
+#define THEME_TERMINAL 3
 
 typedef struct {
     const char *name;

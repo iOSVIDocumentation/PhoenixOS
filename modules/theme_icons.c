@@ -237,8 +237,102 @@ static const char *const art_macos[5][16] = {
 }
 };
 
+/* ---------- CRT Terminal: монохром ---------- */
+static const char *const art_terminal[5][16] = {
+{
+"................",
+".GGGGGGGGGGGGGG.",
+".G............G.",
+".G.GGGGGGGGG.G.",
+".G.G.....GG.G.",
+".G.G.GGGG.G.G.",
+".G.G.GGGG.G.G.",
+".G.G.....GG.G.",
+".G.GGGGGGGGG.G.",
+".G............G.",
+".GGGGGGGGGGGGGG.",
+"................",
+"......GGGG......",
+"......GGGG......",
+"....GGGGGGGG....",
+"................"
+},
+{
+"................",
+".GGGG...........",
+".GGGGGGGGGGGGGG.",
+".GGGGGGGGGGGGGG.",
+".GGGGGGGGGGGGGG.",
+".GGGGGGGGGGGGGG.",
+".GGGGGGGGGGGGGG.",
+".GGGGGGGGGGGGGG.",
+".GGGGGGGGGGGGGG.",
+".gggggggggggggg.",
+".GGGGGGGGGGGGGG.",
+"................",
+"................",
+"................",
+"................",
+"................"
+},
+{
+"................",
+"....GGGGGGGG....",
+"...GGGGGGGGGG...",
+"..GGGGGGGGGGGG..",
+".GGGGGGGGGGGGGG.",
+".GGGGGGGGGGGGGG.",
+".GGGGG.GG.GGGGG.",
+".GGGG.G..G.GGGG.",
+".GGGG.G..G.GGGG.",
+".GGGGG.GG.GGGGG.",
+".GGGGGGGGGGGGGG.",
+"..GGGGGGGGGGGG..",
+"...GGGGGGGGGG...",
+"....GGGGGGGG....",
+"................",
+"................"
+},
+{
+"................",
+"..GGGGGGGGGGGG..",
+".GGGGGGGGGGGGGG.",
+".GGG.GGGGGG.GGG.",
+".GGGGGGGGGGGGGG.",
+".GGGGGGGGGGGGGG.",
+".GGGGGGGGGGGGGG.",
+".GGGGGGGGGGGGGG.",
+".GGGGGGGGGGGGGG.",
+".GGG.GGGGGG.GGG.",
+".GGGGGGGGGGGGGG.",
+"..GGGGGGGGGGGG..",
+"................",
+"................",
+"................",
+"................"
+},
+{
+"................",
+".GGGGGGGGGGGGGG.",
+".GGGGGGGGGGGGGG.",
+".GGGGGGGGGGGGGG.",
+".GGGGGGGGGGGGGG.",
+".GGGGGGGGGGGGGG.",
+".GGGGGGGGGGGGGG.",
+".GGGGGGGGGGGGGG.",
+".GGGGGGGGGGGGGG.",
+".GGGGGGGGGGGGGG.",
+".GGGGGGGGGGGGGG.",
+".GGGGGGGGGGGGGG.",
+"................",
+"................",
+"................",
+"................"
+}
+};
+
 static const char *const *const art_sets[THEME_COUNT] = {
-    art_phoenix[0], art_xp[0], art_macos[0]
+    art_phoenix[0], art_xp[0], art_macos[0], art_terminal[0]
 };
 
 static bool file_valid(const char *path) {
@@ -260,7 +354,7 @@ bool theme_icons_load(int theme_id) {
     icon_loaded = false;
     if (theme_id < 0 || theme_id >= THEME_COUNT) return false;
 
-    static const char *names[THEME_COUNT] = {"phoenix", "xp", "macos"};
+    static const char *names[THEME_COUNT] = {"phoenix", "xp", "macos", "terminal"};
     char path[64];
     snprintf(path, sizeof(path), "/themes/%s/icons.rgb", names[theme_id]);
 
@@ -316,9 +410,10 @@ static void render_icon_be(int theme_id, int icon_id, uint8_t *dst) {
     static const char *PAL = "KWGDBNYyPRE";
     const char *const *art;
     switch (theme_id) {
-        case THEME_WINXP: art = art_xp[icon_id]; break;
-        case THEME_MACOS: art = art_macos[icon_id]; break;
-        default:          art = art_phoenix[icon_id]; break;
+        case THEME_WINXP:    art = art_xp[icon_id]; break;
+        case THEME_MACOS:    art = art_macos[icon_id]; break;
+        case THEME_TERMINAL: art = art_terminal[icon_id]; break;
+        default:             art = art_phoenix[icon_id]; break;
     }
     uint8_t *p = dst;
     for (int r = 0; r < 16; r++) {
@@ -336,7 +431,7 @@ static void render_icon_be(int theme_id, int icon_id, uint8_t *dst) {
 }
 
 void theme_icons_provision(void) {
-    static const char *names[THEME_COUNT] = {"phoenix", "xp", "macos"};
+    static const char *names[THEME_COUNT] = {"phoenix", "xp", "macos", "terminal"};
     static uint8_t buf[ICON_FILE_SIZE]; /* 10240 bytes - OK for RP2350 520KB SRAM */
     int saved_theme = theme_id();
 

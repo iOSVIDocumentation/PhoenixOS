@@ -41,6 +41,19 @@ static const theme_t themes[THEME_COUNT] = {
         .title_stripes = true,
         .icol = {0x0000,0xFFFF,0xC618,0x8410,0x0010,0x0010,0xFFE0,0xCD00,0x780F,0xF800,0x07E0},
     },
+    [THEME_TERMINAL] = {
+        .name = "CRT Terminal",
+        .win_bg = 0x0000, .win_light = 0x07E0, .win_dark = 0x07E0,
+        .title = 0x07E0, .title_text = 0x0000,
+        .text = 0x07E0,
+        .list_bg = 0x0000, .list_text = 0x07E0,
+        .sel_bg = 0x07E0, .sel_text = 0x0000,
+        .desktop = 0x0000,
+        .taskbar = 0x0000, .taskbar_text = 0x07E0,
+        .start_bg = 0x07E0, .start_text = 0x0000, .start_border = 0x07E0,
+        .title_stripes = true,
+        .icol = {0x0000,0xFFFF,0x07E0,0x0000,0x0000,0x0000,0x07E0,0x07E0,0x07E0,0x07E0,0x07E0},
+    },
 };
 
 static int cur_theme = THEME_PHOENIX;
