@@ -10,7 +10,6 @@
 #define FB_W 320
 #define FB_H 240
 static uint16_t *fb = NULL;
-static uint8_t row_buf[FB_W * 2];
 
 static const float verts[8][3] = {
     {-1, -1, -1}, {1, -1, -1}, {1, 1, -1}, {-1, 1, -1},
@@ -29,6 +28,7 @@ static uint32_t fps = 0;
 static uint32_t last_fps_time = 0;
 
 static inline void put(int x, int y, uint16_t c) {
+    if (x < 0 || x >= FB_W || y < 0 || y >= FB_H) return;
     fb[y * FB_W + x] = c;
 }
 
@@ -40,11 +40,29 @@ static void line(int x0, int y0, int x1, int y1, uint16_t c) {
     int err = (dx > dy ? dx : -dy) >> 1;
     int x = x0, y = y0;
     for (int i = 0; i <= (dx > dy ? dx : dy); i++) {
-        fb[y * FB_W + x] = c;
+        put(x, y, c);
         if (x == x1 && y == y1) break;
         int e2 = err;
         if (e2 > -dx) { err -= dy; x += sx; }
         if (e2 < dy) { err += dx; y += sy; }
+    }
+}
+
+static void fb_draw_char(int x, int y, char ch, uint16_t color) {
+    for (int r = 0; r < 8; r++) {
+        uint8_t row = st7789_font_row(ch, (uint8_t)r);
+        for (int c = 0; c < 8; c++) {
+            if (row & (0x80 >> c)) {
+                put(x + c, y + r, color);
+            }
+        }
+    }
+}
+
+static void fb_draw_string(int x, int y, const char *str, uint16_t color) {
+    while (*str) {
+        fb_draw_char(x, y, *str++, color);
+        x += 8;
     }
 }
 
@@ -89,15 +107,8 @@ static void tick(const core_input_t *in, uint32_t delta_ms) {
         last_fps_time = now;
     }
     
-    // Очистка только границ (быстрее чем memset всего буфера)
-    for (int y = 0; y < FB_H; y++) {
-        for (int x = 0; x < 40; x++) fb[y * FB_W + x] = 0;
-        for (int x = FB_W - 40; x < FB_W; x++) fb[y * FB_W + x] = 0;
-    }
-    for (int x = 0; x < FB_W; x++) {
-        for (int y = 0; y < 30; y++) fb[y * FB_W + x] = 0;
-        for (int y = FB_H - 30; y < FB_H; y++) fb[y * FB_W + x] = 0;
-    }
+    // Полная очистка буфера (быстро, ~0.3 мс)
+    memset(fb, 0, FB_W * FB_H * sizeof(uint16_t));
     
     float rot[8][3];
     for (int i = 0; i < 8; i++) {
@@ -123,13 +134,13 @@ static void tick(const core_input_t *in, uint32_t delta_ms) {
         line((int)proj[edges[e][0]][0], (int)proj[edges[e][0]][1],
              (int)proj[edges[e][1]][0], (int)proj[edges[e][1]][1], 0x7F11);
     
-    // Текст рисуем через быстрый st7789_draw_string (поверх буфера)
-    st7789_draw_string(104, 8, "PhoenixOS 3D", 0x7F11, COLOR_BLACK, 1);
+    // Текст в буфер
+    fb_draw_string(104, 8, "PhoenixOS 3D", 0x7F11);
     
     char fps_buf[32];
     snprintf(fps_buf, sizeof(fps_buf), "FPS: %lu", (unsigned long)fps);
-    st7789_draw_string(8, 20, fps_buf, 0x7F11, COLOR_BLACK, 1);
-    st7789_draw_string(8, 220, "BACK: exit", 0x7F11, COLOR_BLACK, 1);
+    fb_draw_string(8, 20, fps_buf, 0x7F11);
+    fb_draw_string(8, 220, "BACK: exit", 0x7F11);
     
     flush();
     
