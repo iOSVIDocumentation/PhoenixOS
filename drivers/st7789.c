@@ -235,6 +235,14 @@ void st7789_draw_string_fast(int16_t x, int16_t y, const char *str, uint16_t col
     }
 }
 
+void st7789_write_full_frame(const uint8_t *buf) {
+    lcd_set_window(0, 0, LCD_WIDTH - 1, LCD_HEIGHT - 1);
+    gpio_put(PIN_LCD_DC, 1);
+    lcd_cs_select();
+    spi_write_blocking(LCD_SPI_PORT, buf, (size_t)LCD_WIDTH * LCD_HEIGHT * 2);
+    lcd_cs_deselect();
+}
+
 void st7789_write_row(int16_t x, int16_t y, int16_t w, const uint8_t *buf) {
     if (x < 0 || y < 0 || w <= 0 || y >= LCD_HEIGHT) return;
     if (x + w > LCD_WIDTH) w = LCD_WIDTH - x;

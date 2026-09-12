@@ -70,10 +70,7 @@ static void fb_draw_string(int x, int y, const char *str, uint16_t color) {
 
 static void flush(void) {
     if (!fb) return;
-    for (int y = 0; y < FB_H; y++) {
-        memcpy(row_buf, &fb[y * FB_W], FB_W * 2);
-        st7789_write_row(0, y, FB_W, row_buf);
-    }
+    st7789_write_full_frame((const uint8_t *)fb);
 }
 
 static void enter(int arg) {
