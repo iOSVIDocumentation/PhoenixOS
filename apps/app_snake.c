@@ -301,10 +301,7 @@ static void game_start(int m) {
 static void step(void) {
     int nx = body[0].x + dir_x, ny = body[0].y + dir_y;
     if (nx < 0 || nx >= SN_COLS || ny < 0 || ny >= SN_ROWS || maze[ny][nx]) { die(); return; }
-    int ddx = nx - food.x, ddy = ny - food.y;
-    if (ddx < 0) ddx = -ddx;
-    if (ddy < 0) ddy = -ddy;
-    bool eat = (ddx <= 1 && ddy <= 1);
+    bool eat = (nx == food.x && ny == food.y);
     for (int i = 0; i < sn_len - (eat ? 0 : 1); i++) {
         if (body[i].x == nx && body[i].y == ny) { die(); return; }
     }
