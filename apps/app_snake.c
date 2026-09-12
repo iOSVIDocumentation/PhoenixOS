@@ -32,6 +32,7 @@ static int mode = 0;
 static int state = 0;
 static int menu_sel = 0;
 static uint32_t game_no = 0;
+static bool prev_nav_up = false, prev_nav_down = false, prev_nav_left = false, prev_nav_right = false;
 static uint32_t rng = 123456789;
 
 static uint32_t rnd(void) {
@@ -251,7 +252,21 @@ static void game_start(int m) {
     if (rng == 0) rng = 1;
     int cx = (SN_COLS / 2) | 1, cy = (SN_ROWS / 2) | 1;
     if (mode) {
-        maze_gen(cx, cy);
+        int safe_attempts = 0;
+        do {
+            maze_gen(cx, cy);
+            safe_attempts++;
+            bool safe = true;
+            for (int dx = -2; dx <= 4; dx++) {
+                for (int dy = -1; dy <= 1; dy++) {
+                    int xx = cx + dx, yy = cy + dy;
+                    if (xx < 0 || xx >= SN_COLS || yy < 0 || yy >= SN_ROWS) continue;
+                    if (maze[yy][xx]) { safe = false; break; }
+                }
+                if (!safe) break;
+            }
+            if (safe || safe_attempts >= 10) break;
+        } while (1);
     } else {
         memset(maze, 0, sizeof(maze));
     }
@@ -331,10 +346,19 @@ static void snake_tick(const core_input_t *in, uint32_t delta_ms) {
         if (in->ok_pressed) game_start(mode);
         return;
     }
-    if (in->nav_left && dir_x != 1)        { dir_x = -1; dir_y = 0; }
-    else if (in->nav_right && dir_x != -1) { dir_x = 1;  dir_y = 0; }
-    else if (in->nav_up && dir_y != 1)     { dir_y = -1; dir_x = 0; }
-    else if (in->nav_down && dir_y != -1)  { dir_y = 1;  dir_x = 0; }
+    bool nav_left_edge = !prev_nav_left && in->nav_left;
+    bool nav_right_edge = !prev_nav_right && in->nav_right;
+    bool nav_up_edge = !prev_nav_up && in->nav_up;
+    bool nav_down_edge = !prev_nav_down && in->nav_down;
+    prev_nav_left = in->nav_left;
+    prev_nav_right = in->nav_right;
+    prev_nav_up = in->nav_up;
+    prev_nav_down = in->nav_down;
+
+    if (nav_left_edge && dir_x != 1)        { dir_x = -1; dir_y = 0; }
+    else if (nav_right_edge && dir_x != -1) { dir_x = 1;  dir_y = 0; }
+    else if (nav_up_edge && dir_y != 1)     { dir_y = -1; dir_x = 0; }
+    else if (nav_down_edge && dir_y != -1)  { dir_y = 1;  dir_x = 0; }
 
     acc_ms += delta_ms;
     if (acc_ms >= step_ms) {
