@@ -1,5 +1,6 @@
 #include "phoenix_core.h"
 #include "ui.h"
+#include "theme.h"
 #include "buzzer.h"
 #include "sound_svc.h"
 #include "st7789.h"
@@ -171,21 +172,23 @@ static int mv_scan(void) {
 }
 
 static void media_draw_row(int idx, int y) {
-    uint16_t bg = (idx == mv_sel) ? COLOR_WIN_BG : COLOR_WHITE;
-    uint16_t fg = (idx == mv_sel) ? COLOR_WHITE : COLOR_BLACK;
+    const theme_t *T = theme_get();
+    uint16_t bg = (idx == mv_sel) ? T->sel_bg : T->list_bg;
+    uint16_t fg = (idx == mv_sel) ? T->sel_text : T->list_text;
     st7789_fill_rect(3, y, 314, 18, bg);
-    st7789_fill_rect(6, y + 3, 10, 12, 0x780F);
-    st7789_fill_rect(9, y + 6, 3, 6, COLOR_WHITE);
+    st7789_fill_rect(6, y + 3, 10, 12, T->title);
+    st7789_fill_rect(9, y + 6, 3, 6, T->title_text);
     st7789_draw_string_fast(22, y + 5, mv_names[idx], fg, bg, 36);
 }
 
 static void media_draw_list(void) {
-    st7789_fill_rect(0, 0, 320, 216, 0xC618);
-    st7789_fill_rect(0, 0, 320, 16, COLOR_WIN_BG);
-    st7789_draw_string_fast(4, 4, "Media - /videos", COLOR_WHITE, COLOR_WIN_BG, 39);
-    st7789_fill_rect(2, 18, 316, 180, COLOR_WHITE);
+    const theme_t *T = theme_get();
+    st7789_fill_rect(0, 0, 320, 216, T->win_bg);
+    st7789_fill_rect(0, 0, 320, 16, T->title);
+    st7789_draw_string_fast(4, 4, "Media - /videos", T->title_text, T->title, 39);
+    st7789_fill_rect(2, 18, 316, 180, T->list_bg);
     if (mv_count == 0) {
-        st7789_draw_string_fast(8, 24, "(no .pvx files)", COLOR_DARK_GRAY, COLOR_WHITE, 37);
+        st7789_draw_string_fast(8, 24, "(no .pvx files)", T->list_text, T->list_bg, 37);
         return;
     }
     for (int row = 0; row < MV_ROWS; row++) {
