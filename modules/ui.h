@@ -51,6 +51,8 @@ void ui_files_row(const fm_state_t *st, int idx, int sel, int y);
 
 void ui_draw_title_bar(int x, int y, int w, const char *text);
 void ui_draw_bootscreen(bool safe_mode, int mount_state);
+#define BOOT_GREEN 0x7F11
+void ui_bootscreen_status(const char *text, uint16_t color);
 void ui_draw_games_menu(int sel);
 void ui_games_row(int i, int sel, int y);
 

@@ -43,7 +43,7 @@ int main(void) {
 
     buzzer_startup();
     ui_draw_bootscreen(safe_mode, -1);
-    st7789_draw_string(45, 200, reset_reason_str(), COLOR_YELLOW, COLOR_WIN_BG, 1);
+    ui_bootscreen_status(reset_reason_str(), BOOT_GREEN);
 
     sd_card_t *pSD = sd_get_by_num(0);
     static FATFS fs;
@@ -63,7 +63,7 @@ int main(void) {
             f_write(&lf, line, n, &bw);
             f_close(&lf);
         }
-        st7789_draw_string(45, 192, "Scanning SD free space...", COLOR_YELLOW, COLOR_WIN_BG, 1);
+        ui_bootscreen_status("Scanning SD free space...", BOOT_GREEN);
         sysinfo_sd_scan();
         buzzer_success();
     } else {
@@ -80,7 +80,7 @@ int main(void) {
     theme_icons_load(g_settings.theme);
     ui_set_wallpaper(g_settings.wallpaper);
     ui_draw_bootscreen(safe_mode, (fr == FR_OK) ? 1 : 0);
-    st7789_draw_string(45, 200, reset_reason_str(), COLOR_YELLOW, COLOR_WIN_BG, 1);
+    ui_bootscreen_status(reset_reason_str(), BOOT_GREEN);
 
     if (!safe_mode && g_settings.cpu_mhz != 150) {
         if (!core_set_cpu_mhz(g_settings.cpu_mhz)) {

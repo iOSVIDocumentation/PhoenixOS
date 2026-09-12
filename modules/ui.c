@@ -2,6 +2,7 @@
 #include "wallpaper.h"
 #include "theme.h"
 #include "theme_icons.h"
+#include "sysinfo.h"
 #include "hardware/clocks.h"
 #include <string.h>
 #include <stdio.h>
@@ -53,28 +54,68 @@ void ui_draw_title_bar(int x, int y, int w, const char *text) {
     draw_title_bar(x, y, w, text);
 }
 
+#define BOOT_GREEN 0x7F11
+#define BOOT_MAP_W 24
+#define BOOT_MAP_H 16
+#define BOOT_CELL  6
+static const char *const boot_phoenix[BOOT_MAP_H] = {
+    "...........XX...........",
+    "...........XXX..........",
+    "..........XXXX..........",
+    "..........XXXX..........",
+    ".....X....XXXXX...X.....",
+    ".....XX..XXXXXX..XX.....",
+    "....XXX..XXXXXX..XXX....",
+    "....XXXX.XXXXXX.XXXX....",
+    "...XXXXX.XXXXXX.XXXXX...",
+    "..XXXXXX.XXXXXX.XXXXXX..",
+    "..XX..XX.XX..XX.XX..XX..",
+    "..XX..XX.XX..XX.XX..XX..",
+    "..XX..XX........XX..XX..",
+    "........................",
+    "..XXXXXXXXXXXXXXXXXXXX..",
+    "..XXXXXXXXXXXXXXXXXXXX..",
+};
+static int bs_line = 0;
+
+static void boot_status_line(int slot, const char *text, uint16_t color) {
+    st7789_draw_string(40, 150 + slot * 12, text, color, COLOR_BLACK, 1);
+}
+
+void ui_bootscreen_status(const char *text, uint16_t color) {
+    if (bs_line > 3) return;
+    boot_status_line(bs_line++, text, color);
+}
+
 void ui_draw_bootscreen(bool safe_mode, int mount_state) {
-    const theme_t *T = theme_get();
-    st7789_fill(T->desktop);
-    int x = 10, y = 10, w = 300, h = 220;
-    st7789_fill_rect(x, y, w, h, T->win_bg);
-    st7789_fill_rect(x, y, w, 1, T->win_light);
-    st7789_fill_rect(x, y, 1, h, T->win_light);
-    st7789_fill_rect(x, y + h - 1, w, 1, T->win_dark);
-    st7789_fill_rect(x + w - 1, y, 1, h, T->win_dark);
-    draw_title_bar(x + 2, y + 2, w - 4, "PhoenixOS");
-    st7789_draw_string(72, 80, "Retro Workstation v0.9.8", T->text, T->win_bg, 1);
-    st7789_draw_string(104, 95, "Kernel Edition", T->text, T->win_bg, 1);
-    st7789_draw_string(68, 110, "RP2350 (ARM Cortex-M33)", COLOR_DARK_GRAY, T->win_bg, 1);
-    if (safe_mode) {
-        st7789_draw_string(60, 140, "SAFE MODE: settings reset", COLOR_RED, T->win_bg, 1);
+    st7789_fill(COLOR_BLACK);
+    st7789_draw_rect(12, 8, 296, 224, BOOT_GREEN);
+    st7789_draw_rect(13, 9, 294, 222, BOOT_GREEN);
+    int x0 = (LCD_WIDTH - BOOT_MAP_W * BOOT_CELL) / 2;
+    for (int r = 0; r < BOOT_MAP_H; r++) {
+        for (int c = 0; c < BOOT_MAP_W; c++) {
+            if (boot_phoenix[r][c] == 'X')
+                st7789_fill_rect(x0 + c * BOOT_CELL, 20 + r * BOOT_CELL, BOOT_CELL, BOOT_CELL, BOOT_GREEN);
+        }
     }
+    st7789_draw_string(80, 124, "PHOENIX OS", BOOT_GREEN, COLOR_BLACK, 2);
+    bs_line = 0;
     if (mount_state < 0) {
-        st7789_draw_string(45, 185, "Mounting SD (FAT32)...", T->text, T->win_bg, 1);
+        boot_status_line(bs_line++, "Mounting SD (FAT32)...", BOOT_GREEN);
     } else if (mount_state == 1) {
-        st7789_draw_string(45, 185, "SD Card Mounted! OK      ", COLOR_GREEN, T->win_bg, 1);
+        boot_status_line(bs_line++, "SD Card Mounted! OK", BOOT_GREEN);
     } else {
-        st7789_draw_string(45, 185, "SD Card Mount Failed!    ", COLOR_RED, T->win_bg, 1);
+        boot_status_line(bs_line++, "SD Card Mount Failed!", COLOR_RED);
+    }
+    if (mount_state == 1) {
+        uint32_t tot_kb, free_kb;
+        sysinfo_sd_kb(&tot_kb, &free_kb);
+        char sd[40];
+        snprintf(sd, sizeof(sd), "SD free: %lu MB", (unsigned long)(free_kb / 1024));
+        boot_status_line(bs_line++, sd, BOOT_GREEN);
+    }
+    if (safe_mode) {
+        boot_status_line(bs_line++, "SAFE MODE: settings reset", COLOR_RED);
     }
 }
 
