@@ -5,6 +5,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 #define FB_W 320
 #define FB_H 240
@@ -23,8 +24,16 @@ static const int edges[12][2] = {
 };
 
 static float ax = 0.3f, ay = 0.5f, az = 0.2f;
+static uint32_t frame_count = 0;
+static uint32_t fps = 0;
+static uint32_t last_fps_time = 0;
 
-static inline void line(int x0, int y0, int x1, int y1, uint16_t c) {
+static inline void put(int x, int y, uint16_t c) {
+    if (x < 0 || x >= FB_W || y < 0 || y >= FB_H) return;
+    fb[y * FB_W + x] = c;
+}
+
+static void line(int x0, int y0, int x1, int y1, uint16_t c) {
     int dx = x1 > x0 ? x1 - x0 : x0 - x1;
     int dy = y1 > y0 ? y1 - y0 : y0 - y1;
     int sx = x0 < x1 ? 1 : -1;
@@ -41,6 +50,24 @@ static inline void line(int x0, int y0, int x1, int y1, uint16_t c) {
     }
 }
 
+static void fb_draw_char(int x, int y, char ch, uint16_t color) {
+    for (int r = 0; r < 8; r++) {
+        uint8_t row = st7789_font_row(ch, (uint8_t)r);
+        for (int c = 0; c < 8; c++) {
+            if (row & (0x80 >> c)) {
+                put(x + c, y + r, color);
+            }
+        }
+    }
+}
+
+static void fb_draw_string(int x, int y, const char *str, uint16_t color) {
+    while (*str) {
+        fb_draw_char(x, y, *str++, color);
+        x += 8;
+    }
+}
+
 static void flush(void) {
     for (int y = 0; y < FB_H; y++) {
         memcpy(row_buf, &fb[y * FB_W], FB_W * 2);
@@ -51,13 +78,23 @@ static void flush(void) {
 static void enter(int arg) {
     (void)arg;
     ax = 0.3f; ay = 0.5f; az = 0.2f;
+    frame_count = 0;
+    fps = 0;
+    last_fps_time = to_ms_since_boot(get_absolute_time());
     memset(fb, 0, sizeof(fb));
     st7789_fill(COLOR_BLACK);
 }
 
 static void tick(const core_input_t *in, uint32_t delta_ms) {
-    (void)delta_ms;
     ax += 0.06f; ay += 0.07f; az += 0.035f;
+    frame_count++;
+    
+    uint32_t now = to_ms_since_boot(get_absolute_time());
+    if (now - last_fps_time >= 1000) {
+        fps = frame_count;
+        frame_count = 0;
+        last_fps_time = now;
+    }
     
     memset(fb, 0, sizeof(fb));
     
@@ -85,10 +122,13 @@ static void tick(const core_input_t *in, uint32_t delta_ms) {
         line((int)proj[edges[e][0]][0], (int)proj[edges[e][0]][1],
              (int)proj[edges[e][1]][0], (int)proj[edges[e][1]][1], 0x7F11);
     
-    flush();
+    char fps_buf[32];
+    snprintf(fps_buf, sizeof(fps_buf), "FPS: %lu", (unsigned long)fps);
+    fb_draw_string(8, 8, "3D Test - Cube", 0x7F11);
+    fb_draw_string(8, 20, fps_buf, 0x7F11);
+    fb_draw_string(8, 220, "BACK: exit", 0x7F11);
     
-    st7789_draw_string(8, 8, "3D Test - Cube", 0x7F11, COLOR_BLACK, 1);
-    st7789_draw_string(8, 220, "BACK: exit", 0x7F11, COLOR_BLACK, 1);
+    flush();
     
     if (in->back_pressed) { buzzer_click(); core_open(APP_DESKTOP, 0); }
 }
