@@ -9,7 +9,7 @@
 
 #define FB_W 320
 #define FB_H 240
-static uint16_t fb[FB_W * FB_H];
+static uint16_t *fb = NULL;
 static uint8_t row_buf[FB_W * 2];
 
 static const float verts[8][3] = {
@@ -29,7 +29,7 @@ static uint32_t fps = 0;
 static uint32_t last_fps_time = 0;
 
 static inline void put(int x, int y, uint16_t c) {
-    if (x < 0 || x >= FB_W || y < 0 || y >= FB_H) return;
+    if (!fb || x < 0 || x >= FB_W || y < 0 || y >= FB_H) return;
     fb[y * FB_W + x] = c;
 }
 
@@ -69,6 +69,7 @@ static void fb_draw_string(int x, int y, const char *str, uint16_t color) {
 }
 
 static void flush(void) {
+    if (!fb) return;
     for (int y = 0; y < FB_H; y++) {
         memcpy(row_buf, &fb[y * FB_W], FB_W * 2);
         st7789_write_row(0, y, FB_W, row_buf);
@@ -77,15 +78,30 @@ static void flush(void) {
 
 static void enter(int arg) {
     (void)arg;
+    fb = (uint16_t *)malloc(FB_W * FB_H * sizeof(uint16_t));
+    if (!fb) {
+        core_open(APP_DESKTOP, 0);
+        return;
+    }
     ax = 0.3f; ay = 0.5f; az = 0.2f;
     frame_count = 0;
     fps = 0;
     last_fps_time = to_ms_since_boot(get_absolute_time());
-    memset(fb, 0, sizeof(fb));
+    memset(fb, 0, FB_W * FB_H * sizeof(uint16_t));
     st7789_fill(COLOR_BLACK);
 }
 
+static void exit_app(void) {
+    if (fb) {
+        free(fb);
+        fb = NULL;
+    }
+}
+
 static void tick(const core_input_t *in, uint32_t delta_ms) {
+    (void)delta_ms;
+    if (!fb) return;
+    
     ax += 0.06f; ay += 0.07f; az += 0.035f;
     frame_count++;
     
@@ -96,7 +112,7 @@ static void tick(const core_input_t *in, uint32_t delta_ms) {
         last_fps_time = now;
     }
     
-    memset(fb, 0, sizeof(fb));
+    memset(fb, 0, FB_W * FB_H * sizeof(uint16_t));
     
     float rot[8][3];
     for (int i = 0; i < 8; i++) {
@@ -122,9 +138,10 @@ static void tick(const core_input_t *in, uint32_t delta_ms) {
         line((int)proj[edges[e][0]][0], (int)proj[edges[e][0]][1],
              (int)proj[edges[e][1]][0], (int)proj[edges[e][1]][1], 0x7F11);
     
+    fb_draw_string(104, 8, "PhoenixOS 3D", 0x7F11);
+    
     char fps_buf[32];
     snprintf(fps_buf, sizeof(fps_buf), "FPS: %lu", (unsigned long)fps);
-    fb_draw_string(8, 8, "3D Test - Cube", 0x7F11);
     fb_draw_string(8, 20, fps_buf, 0x7F11);
     fb_draw_string(8, 220, "BACK: exit", 0x7F11);
     
@@ -137,4 +154,5 @@ const phoenix_app_t app_cube = {
     .name = "cube",
     .on_enter = enter,
     .on_tick = tick,
+    .on_exit = exit_app,
 };
