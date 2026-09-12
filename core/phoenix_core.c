@@ -36,7 +36,7 @@ void core_log(const char *msg) {
 
 bool core_set_cpu_mhz(uint16_t mhz) {
     if (!set_sys_clock_khz((uint32_t)mhz * 1000, true)) return false;
-    spi_set_baudrate(spi0, 50 * 1000 * 1000);
+    spi_set_baudrate(spi0, 10 * 1000 * 1000);
     spi_set_baudrate(spi1, 12500000);
     return true;
 }

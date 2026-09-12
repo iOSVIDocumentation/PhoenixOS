@@ -100,7 +100,7 @@ void st7789_init(void) {
     gpio_set_dir(PIN_LCD_RST, GPIO_OUT);
     gpio_put(PIN_LCD_RST, 1);
 
-    spi_init(LCD_SPI_PORT, 50 * 1000 * 1000);
+    spi_init(LCD_SPI_PORT, 10 * 1000 * 1000);
     spi_set_format(LCD_SPI_PORT, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
     gpio_set_function(PIN_LCD_SCK, GPIO_FUNC_SPI);
     gpio_set_function(PIN_LCD_MOSI, GPIO_FUNC_SPI);
@@ -125,9 +125,8 @@ void st7789_init(void) {
     lcd_write_cmd(0x20); sleep_ms(10);
     lcd_write_cmd(0x13); sleep_ms(10);
 
-    st7789_fill(0x0000);
-
     lcd_write_cmd(0x29); sleep_ms(50);
+    st7789_fill(0x0000);
 
     st7789_set_backlight(100);
 }
