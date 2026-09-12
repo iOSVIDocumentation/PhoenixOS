@@ -95,6 +95,7 @@ static void exit_app(void) {
         free(fb);
         fb = NULL;
     }
+    st7789_fill(COLOR_BLACK);
 }
 
 static void tick(const core_input_t *in, uint32_t delta_ms) {
