@@ -367,7 +367,7 @@ void ui_draw_about_window(void) {
     st7789_fill_rect(x, y + h - 1, w, 1, T->win_dark);
     st7789_fill_rect(x + w - 1, y, 1, h, T->win_dark);
 
-    draw_title_bar(x + 3, y + 3, w - 6, "About PhoenixOS v0.9.8");
+    draw_title_bar(x + 3, y + 3, w - 6, "About PhoenixOS v1.0-beta1");
 
     int ty = y + 24;
     st7789_draw_string(x + 8, ty, "MCU: RP2350 M33 x2", T->text, T->win_bg, 1);
@@ -552,7 +552,7 @@ void ui_draw_cpu_menu(int sel, uint16_t current) {
 
 /* ---------- Меню игр ---------- */
 
-static const char *games_names[GAMES_ROWS] = {"Snake", "Tetris"};
+static const char *games_names[GAMES_ROWS] = {"Snake", "Tetris", "3D Test"};
 
 void ui_games_row(int i, int sel, int y) {
     const theme_t *T = theme_get();
