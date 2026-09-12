@@ -6,9 +6,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define FB_W 320
-#define FB_H 240
+#define FB_W 160
+#define FB_H 120
 static uint16_t fb[FB_W * FB_H];
+static uint8_t row_buf[FB_W * 4];
 
 static const float cube_verts[8][3] = {
     {-1, -1, -1}, {1, -1, -1}, {1, 1, -1}, {-1, 1, -1},
@@ -46,15 +47,17 @@ static void fb_fill_triangle(int x0, int y0, int x1, int y1, int x2, int y2, uin
     }
 }
 
-static void fb_flush(void) {
-    static uint8_t row_buf[FB_W * 2];
+static void fb_flush_doubled(void) {
     for (int y = 0; y < FB_H; y++) {
         for (int x = 0; x < FB_W; x++) {
             uint16_t c = fb[y * FB_W + x];
-            row_buf[x * 2] = c >> 8;
-            row_buf[x * 2 + 1] = c & 0xFF;
+            row_buf[x * 4]     = c >> 8;
+            row_buf[x * 4 + 1] = c & 0xFF;
+            row_buf[x * 4 + 2] = c >> 8;
+            row_buf[x * 4 + 3] = c & 0xFF;
         }
-        st7789_write_row(0, y, FB_W, row_buf);
+        st7789_write_row(0, y * 2, FB_W * 2, row_buf);
+        st7789_write_row(0, y * 2 + 1, FB_W * 2, row_buf);
     }
 }
 
@@ -75,10 +78,10 @@ static void cube_enter(int arg) {
 }
 
 static void cube_tick(const core_input_t *in, uint32_t delta_ms) {
-    float dt = delta_ms / 1000.0f;
-    angle_x += 1.5f * dt;
-    angle_y += 2.0f * dt;
-    angle_z += 1.0f * dt;
+    (void)delta_ms;
+    angle_x += 0.025f;
+    angle_y += 0.035f;
+    angle_z += 0.018f;
     
     float rotated[8][3];
     for (int i = 0; i < 8; i++) {
@@ -127,7 +130,7 @@ static void cube_tick(const core_input_t *in, uint32_t delta_ms) {
         float nlen = sqrtf(nx*nx + ny*ny + nz*nz);
         if (nlen < 0.001f) continue;
         nx /= nlen; ny /= nlen; nz /= nlen;
-        if (nz > 0.0f) continue;
+        if (nz > 0.1f) continue;
         float dot = nx * light_x + ny * light_y + nz * light_z;
         if (dot < 0) dot = 0;
         float brightness = 0.3f + 0.7f * dot;
@@ -137,9 +140,9 @@ static void cube_tick(const core_input_t *in, uint32_t delta_ms) {
         for (int v = 0; v < 4; v++) {
             int vi = cube_faces[f][v];
             float z = rotated[vi][2] + 3.0f;
-            float scale = 80.0f / z;
-            proj[v][0] = 160 + rotated[vi][0] * scale;
-            proj[v][1] = 120 + rotated[vi][1] * scale;
+            float scale = 50.0f / z;
+            proj[v][0] = 80 + rotated[vi][0] * scale;
+            proj[v][1] = 60 + rotated[vi][1] * scale;
         }
         fb_fill_triangle((int)proj[0][0], (int)proj[0][1],
                          (int)proj[1][0], (int)proj[1][1],
@@ -149,7 +152,7 @@ static void cube_tick(const core_input_t *in, uint32_t delta_ms) {
                          (int)proj[3][0], (int)proj[3][1], color);
     }
     
-    fb_flush();
+    fb_flush_doubled();
     st7789_draw_string(8, 8, "3D Test - Cube", 0x7F11, COLOR_BLACK, 1);
     st7789_draw_string(8, 220, "BACK: exit", 0x7F11, COLOR_BLACK, 1);
     
