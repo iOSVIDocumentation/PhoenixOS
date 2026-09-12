@@ -33,7 +33,6 @@ void st7789_draw_char(int16_t x, int16_t y, char ch, uint16_t color, uint16_t bg
 void st7789_draw_string(int16_t x, int16_t y, const char *str, uint16_t color, uint16_t bg, uint8_t scale);
 void st7789_draw_string_fast(int16_t x, int16_t y, const char *str, uint16_t color, uint16_t bg, uint8_t max_chars);
 void st7789_write_row(int16_t x, int16_t y, int16_t w, const uint8_t *buf);
-void st7789_write_full_frame(const uint8_t *buf);
 uint8_t st7789_font_row(char ch, uint8_t row);
 void st7789_display_on(void);
 
