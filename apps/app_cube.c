@@ -10,6 +10,7 @@
 #define FB_W 320
 #define FB_H 240
 static uint16_t *fb = NULL;
+static uint8_t row_buf[FB_W * 2];
 
 static const float verts[8][3] = {
     {-1, -1, -1}, {1, -1, -1}, {1, 1, -1}, {-1, 1, -1},
