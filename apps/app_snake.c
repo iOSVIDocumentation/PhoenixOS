@@ -206,12 +206,26 @@ static void maze_gen(int cx, int cy) {
     memset(maze, 0, sizeof(maze));
 }
 
+static int free_neighbours(int x, int y) {
+    int c = 0;
+    static const int8_t dx[4] = {-1, 1, 0, 0};
+    static const int8_t dy[4] = {0, 0, -1, 1};
+    for (int d = 0; d < 4; d++) {
+        int nx = x + dx[d], ny = y + dy[d];
+        if (nx < 0 || nx >= SN_COLS || ny < 0 || ny >= SN_ROWS) continue;
+        if (!maze[ny][nx]) c++;
+    }
+    return c;
+}
+
 static void food_place(void) {
     if (sn_len >= SN_MAXLEN) { die(); return; }  // WIN condition
     int attempts = 0;
     while (attempts < 1000) {
         int x = (int)(rnd() % SN_COLS), y = (int)(rnd() % SN_ROWS);
         if (maze[y][x]) { attempts++; continue; }
+        /* не класть в тупики — должно быть хотя бы 2 свободных соседа (вход + выход) */
+        if (mode && free_neighbours(x, y) < 2) { attempts++; continue; }
         bool on = false;
         for (int i = 0; i < sn_len; i++)
             if (body[i].x == x && body[i].y == y) { on = true; break; }
