@@ -108,7 +108,7 @@ Firmware: build/PhoenixOS.uf2
 
 *Includes everything from v0.9.5.*
 
-- 🎨 **Theme engine** — Phoenix / Windows XP / Mac OS Classic. Every window,
+- 🎨 **Theme engine** — Phoenix / Windows XP / CRT Terminal. Every window,
   menu and the boot screen follow the active theme; live switching.
 - 🖼️ **Per-theme desktop icons** stored on the SD card
   (`/themes/<name>/icons.rgb`); missing sets are generated automatically,
@@ -228,7 +228,7 @@ Full wiring notes: `PINOUT.md`.
     |   |-- phoenix/icons.rgb   per-theme desktop icon sets
     |   |-- xp/icons.rgb        (5 icons, 32x32, RGB565 BE,
     |   |                       magenta = transparent)
-    |   +-- macos/icons.rgb
+    |   +-- terminal/icons.rgb
     |-- config.txt       board marker ("System OK")
     |-- phoenix.cfg      settings (safe defaults, auto-created)
     |-- snake.hi         Snake high scores (classic / maze)
@@ -308,7 +308,7 @@ Hold **BOOTSEL**, plug the board in, copy `build/PhoenixOS.uf2` to the
 - Release ships the complete source archive alongside the UF2.
 
 ### v0.9.5
-- Theme engine (Phoenix / Windows XP / Mac OS Classic), live switching.
+- Theme engine (Phoenix / Windows XP / CRT Terminal), live switching.
 - Per-theme SD icons, auto-generated missing sets.
 - Games menu + Tetris (2 modes, dual rotation, hold-to-move).
 - Full SD auto-provisioning for empty cards.

@@ -31,7 +31,7 @@ void provision_sd_card(void) {
     if (!dir_exists("/themes"))         f_mkdir("/themes");
     if (!dir_exists("/themes/phoenix")) f_mkdir("/themes/phoenix");
     if (!dir_exists("/themes/xp"))      f_mkdir("/themes/xp");
-    if (!dir_exists("/themes/macos"))   f_mkdir("/themes/macos");
+    if (!dir_exists("/themes/terminal")) f_mkdir("/themes/terminal");
 
     if (!file_exists("/config.txt")) {
         create_file("/config.txt", "System OK\n");
