@@ -21,6 +21,8 @@ extern const phoenix_app_t app_games;
 extern const phoenix_app_t app_tetris;
 extern app_id_t g_games_snake_id;
 extern app_id_t g_games_tetris_id;
+extern app_id_t g_games_cube_id;
+extern const phoenix_app_t app_cube;
 
 static bool safe_mode = false;
 
@@ -104,6 +106,7 @@ int main(void) {
     core_register(APP_SNAKE,     &app_games);
     g_games_snake_id  = core_register_dyn(&app_snake);
     g_games_tetris_id = core_register_dyn(&app_tetris);
+    g_games_cube_id = core_register_dyn(&app_cube);
 
     core_start(APP_DESKTOP);
     return 0;
