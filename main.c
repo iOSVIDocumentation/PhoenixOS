@@ -50,6 +50,7 @@ int main(void) {
     FRESULT fr = f_mount(&fs, pSD->pcName, 1);
     if (fr == FR_OK) {
         provision_sd_card();
+        theme_icons_provision();
 
         /* журнал причин перезагрузки */
         FIL lf;
