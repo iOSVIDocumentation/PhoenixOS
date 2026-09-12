@@ -6,7 +6,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#define ICON_MAGIC     "PHXICN3\n"
+#define ICON_MAGIC     "PHXICN4\n"
 #define ICON_MAGIC_LEN 8
 #define ICON_FILE_SIZE (ICON_MAGIC_LEN + ICON_CACHE_SIZE)
 #define ICON_KEY_HI    0xF8
