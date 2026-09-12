@@ -125,8 +125,9 @@ void st7789_init(void) {
     lcd_write_cmd(0x20); sleep_ms(10);
     lcd_write_cmd(0x13); sleep_ms(10);
 
-    lcd_write_cmd(0x29); sleep_ms(50);
     st7789_fill(0x0000);
+
+    lcd_write_cmd(0x29); sleep_ms(50);
 
     st7789_set_backlight(100);
 }
