@@ -1,6 +1,6 @@
 # PhoenixOS
 
-[![Version](https://img.shields.io/badge/version-v0.9.8-blue)](../../releases)
+[![Version](https://img.shields.io/badge/version-v1.0--beta1-blueviolet)](../../releases)
 [![MCU](https://img.shields.io/badge/MCU-RP2350%20%7C%20dual%20Cortex--M33-green)](https://www.raspberrypi.com/products/rp2350/)
 [![Language](https://img.shields.io/badge/language-C99-orange)]()
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue)](#license)
@@ -16,6 +16,8 @@ flash one UF2 file and get a tiny desktop computer.
 
 **Contents**
 
+- [What's New in v1.0-beta1](#whats-new-in-v10-beta1)
+- [Roadmap / Future Plans](#roadmap--future-plans)
 - [What's New in v0.9.8](#whats-new-in-v098)
 - [What's New in v0.9.7](#whats-new-in-v097)
 - [What's New in v0.9.6](#whats-new-in-v096)
@@ -36,7 +38,7 @@ flash one UF2 file and get a tiny desktop computer.
 | Asset | Link |
 | --- | --- |
 | Firmware (UF2, flash-ready) | https://github.com/iOSVIDocumentation/PhoenixOS/releases/latest/download/PhoenixOS.uf2 |
-| Full source code (ZIP, v0.9.8) | https://github.com/iOSVIDocumentation/PhoenixOS/archive/refs/tags/v0.9.8.zip |
+| Full source code (ZIP, v1.0-beta1) | https://github.com/iOSVIDocumentation/PhoenixOS/archive/refs/tags/v1.0-beta1.zip |
 | Full source code (ZIP, main branch) | https://github.com/iOSVIDocumentation/PhoenixOS/archive/refs/heads/main.zip |
 | All releases | https://github.com/iOSVIDocumentation/PhoenixOS/releases |
 
@@ -67,6 +69,43 @@ make -j$(nproc)
 ```
 
 Firmware: build/PhoenixOS.uf2
+
+## What's New in v1.0-beta1
+
+**Major milestone** — first beta of the 1.0 line with a new 3D demo app, display performance boost and gameplay fixes.
+
+### New Apps
+- 🎲 **3D Test** — rotating wireframe cube with real-time FPS counter.
+  - Full 320×240 software framebuffer.
+  - Dynamic RAM allocation (`malloc`/`free`) — memory is held only while the app is active.
+  - Perspective projection, 3-axis rotation, Bresenham line drawing.
+  - Stable on-screen text (rendered into the framebuffer, no flicker).
+
+### Display & Drivers
+- **SPI0 baudrate raised from 10 MHz to 40 MHz** (stable) — display writes are ~4× faster.
+- Eliminated the white flash on boot and on app exit (fixed `st7789_init()` ordering: framebuffer is filled with black **before** the display command `0x29` turns the panel on).
+- New driver helper `st7789_write_full_frame()` for single bulk SPI transfers (used by future apps).
+
+### Games
+- 🐍 **Snake**: fixed impossible deaths near food — eating now requires an exact head-food overlap instead of a 1-cell radius. Tail-exclusion logic for self-collision is now correct again.
+
+### System
+- **Version bumped to v1.0-beta1** (displayed in the About window).
+- All local commits are now pushed to origin and a full source archive ships with the release.
+
+---
+
+## Roadmap / Future Plans
+
+What we want to tackle in upcoming releases (post-1.0 GA):
+
+- 🏎 **Pseudo-3D racing game** — OutRun-style segment-based road rendering with scaling roadside sprites, targeting a stable 30 fps in the 160×120 doubled mode.
+- 🎬 **Media player overhaul** — RLE-compressed PVX v2 frames, core1 read-ahead buffer, and a proper `tools/pvx_pack.py` converter so users don't have to run a custom pipeline.
+- 🕹 **Raycaster engine (Wolf3D-style)** — textured walls in 160×120 at 20–30 fps; brings back the spirit of early 90s 3D shooters within our hardware limits.
+- 🔧 **DMA-driven SPI** for the display — offload framebuffer flush to DMA, freeing core 0 for more work.
+- 📦 **Improved SD handling and caching** — further reduce UI stalls during media/file-manager use.
+
+---
 
 ## What's New in v0.9.8
 
@@ -286,7 +325,7 @@ Hold **BOOTSEL**, plug the board in, copy `build/PhoenixOS.uf2` to the
 ## Changelog
 
 <details>
-<summary>🕰️ <b>v0.9.8 / v0.9.7 / v0.9.6 / v0.9.5 / v0.9.3 (open)</b></summary>
+<summary>🕰️ <b>v1.0-beta1 / v0.9.8 / v0.9.7 / v0.9.6 / v0.9.5 / v0.9.3 (open)</b></summary>
 
 ### v0.9.8
 
