@@ -18,9 +18,6 @@ flash one UF2 file and get a tiny desktop computer.
 
 - [What's New in v1.0-beta1](#whats-new-in-v10-beta1)
 - [Roadmap / Future Plans](#roadmap--future-plans)
-- [What's New in v0.9.8](#whats-new-in-v098)
-- [What's New in v0.9.7](#whats-new-in-v097)
-- [What's New in v0.9.6](#whats-new-in-v096)
 - [Feature Highlights](#feature-highlights)
 - [Hardware & Pinout](#hardware--pinout)
 - [Controls](#controls)
@@ -104,63 +101,6 @@ What we want to tackle in upcoming releases (post-1.0 GA):
 - 🕹 **Raycaster engine (Wolf3D-style)** — textured walls in 160×120 at 20–30 fps; brings back the spirit of early 90s 3D shooters within our hardware limits.
 - 🔧 **DMA-driven SPI** for the display — offload framebuffer flush to DMA, freeing core 0 for more work.
 - 📦 **Improved SD handling and caching** — further reduce UI stalls during media/file-manager use.
-
----
-
-## What's New in v0.9.8
-
-**Stability & safety pass** — surgical fixes across the kernel, drivers and apps after a full source audit.
-
-### Kernel & Core
-- Explicit `adc_init()` in both `main.c` and `core_start()` — thermal guard no longer depends on driver init order.
-- `core_log()` buffer enlarged to 128 bytes — prevents silent truncation on long messages.
-- Main loop now uses `sleep_until()` for a stable 100 Hz tick instead of a flat `sleep_ms(10)`.
-- PWM wrap clamped to 65535 — prevents garbage values on sub-9 Hz buzzer tones.
-- **UI-sound priority with movie ducking**: button clicks now play cleanly even during PVX movie playback (previous behaviour silently dropped them).
-
-### Storage
-- `provision.c` now verifies the written byte count — prevents silent creation of 0-byte config files on full SD cards.
-- Removed dead `sd_card.c` (unused, was occupying SRAM).
-
-### Drivers
-- **Joystick SW pin**: added 20 ms software debounce — eliminates spurious multi-clicks from mechanical bounce.
-- `snd_success()` made non-blocking.
-
-### Apps
-- `app_snake.c`: `food_place()` now has a 1000-iteration limit and a `die()` fallback — prevents an infinite loop if the board somehow gets fully filled.
-- `app_settings.c`: theme switch now beeps an error if `theme_icons_load()` fails (corrupted/missing file).
-- `theme_icons_provision()` now saves and restores the current theme (was leaving the system in Mac OS theme after first-boot).
-- `app_media.c`: `pv_fps` is only assigned after PVX header validation succeeds.
-- About window: removed leftover debug `core_log()` calls that were polluting `reset.log`.
-
-### Cleanup
-- Removed unused `Wolf3D` raycaster app and its `APP_WOLF3D` enum slot (was dead code, had potential out-of-bounds map access).
-- Removed dead `snd_shoot()` function (only used by Wolf3D).
-- Removed stray debug logs from About window.
-
-## What's New in v0.9.7
-
-- Snake: the playing field is now **fully black** - no checkerboard
-  glare; maze walls remain clearly visible.
-
-## What's New in v0.9.6
-
-*Includes everything from v0.9.5.*
-
-- 🎨 **Theme engine** — Phoenix / Windows XP / CRT Terminal. Every window,
-  menu and the boot screen follow the active theme; live switching.
-- 🖼️ **Per-theme desktop icons** stored on the SD card
-  (`/themes/<name>/icons.rgb`); missing sets are generated automatically,
-  your files are never overwritten.
-- 🎮 **Games menu** — themed Snake (Classic + Maze, records) and the new
-  **Tetris** (Easy / Medium, hold-to-move, dual rotation, hard drop).
-- 💾 **SD auto-provisioning** — empty card? The OS creates videos/,
-  wallpapers/, themes/, config.txt, phoenix.cfg (stock 150 MHz) and
-  snake.hi by itself.
-- 🛡️ **Reliability** — cached SD statistics (no more watchdog timeout in
-  "About System"), dynamic registration fix, smooth rendering.
-- 📖 **Docs & packaging** — English README, exact pinout table,
-  Apache 2.0 license, source archive in the release.
 
 ---
 
@@ -326,6 +266,14 @@ Hold **BOOTSEL**, plug the board in, copy `build/PhoenixOS.uf2` to the
 
 <details>
 <summary>🕰️ <b>v1.0-beta1 / v0.9.8 / v0.9.7 / v0.9.6 / v0.9.5 / v0.9.3 (open)</b></summary>
+
+### v1.0-beta1
+
+- New app: **3D Test** (rotating wireframe cube, 320×240 framebuffer, dynamic RAM, FPS counter).
+- SPI0 baudrate raised 10 → 40 MHz: ~4× faster display writes.
+- White flash on boot and on app exit eliminated (init order fix).
+- Snake: impossible deaths near food fixed (exact head-food overlap required).
+- Version bumped to v1.0-beta1 (About window).
 
 ### v0.9.8
 
