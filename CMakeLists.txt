@@ -21,6 +21,8 @@ add_executable(PhoenixOS
     apps/app_snake.c
     apps/app_games.c
     apps/app_tetris.c
+    apps/app_cube.c
+    apps/app_calc.c
     apps/app_files.c
     apps/app_viewer.c
     apps/app_settings.c

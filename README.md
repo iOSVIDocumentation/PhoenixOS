@@ -1,6 +1,6 @@
 # PhoenixOS
 
-[![Version](https://img.shields.io/badge/version-v1.0--beta1-blueviolet)](../../releases)
+[![Version](https://img.shields.io/badge/version-v1.0--beta2-blueviolet)](../../releases)
 [![MCU](https://img.shields.io/badge/MCU-RP2350%20%7C%20dual%20Cortex--M33-green)](https://www.raspberrypi.com/products/rp2350/)
 [![Language](https://img.shields.io/badge/language-C99-orange)]()
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue)](#license)
@@ -35,7 +35,7 @@ flash one UF2 file and get a tiny desktop computer.
 | Asset | Link |
 | --- | --- |
 | Firmware (UF2, flash-ready) | https://github.com/iOSVIDocumentation/PhoenixOS/releases/latest/download/PhoenixOS.uf2 |
-| Full source code (ZIP, v1.0-beta1) | https://github.com/iOSVIDocumentation/PhoenixOS/archive/refs/tags/v1.0-beta1.zip |
+| Full source code (ZIP, v1.0-beta1) | https://github.com/iOSVIDocumentation/PhoenixOS/archive/refs/tags/v1.0-beta2.zip |
 | Full source code (ZIP, main branch) | https://github.com/iOSVIDocumentation/PhoenixOS/archive/refs/heads/main.zip |
 | All releases | https://github.com/iOSVIDocumentation/PhoenixOS/releases |
 
@@ -266,6 +266,14 @@ Hold **BOOTSEL**, plug the board in, copy `build/PhoenixOS.uf2` to the
 
 <details>
 <summary>🕰️ <b>v1.0-beta1 / v0.9.8 / v0.9.7 / v0.9.6 / v0.9.5 / v0.9.3 (open)</b></summary>
+
+### v1.0-beta2
+
+- New app: **Calculator** (expression-based, dynamic memory allocation, less sensitive joystick).
+- Desktop: Calculator icon added on second row (dynamic layout).
+- Settings: navigation speed reduced (200ms delay for smoother theme/CPU/brightness adjustment).
+- Calculator features: single-line expression display, dynamic RAM via `malloc`/`free`, reduced joystick sensitivity.
+- Version bumped to v1.0-beta2 (About window).
 
 ### v1.0-beta1
 

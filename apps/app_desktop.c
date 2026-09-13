@@ -2,6 +2,8 @@
 #include "ui.h"
 #include "buzzer.h"
 
+extern app_id_t g_apps_calc_id;
+
 static int cursor_x = 160;
 static int cursor_y = 100;
 static int last_hover = -1;
@@ -62,6 +64,9 @@ static void desktop_tick(const core_input_t *in, uint32_t delta_ms) {
             buzzer_click();
             media_open_path("");
             core_open(APP_MEDIA, 0);
+        } else if (last_hover == ICON_CALC) {
+            buzzer_click();
+            core_open(g_apps_calc_id, 0);
         }
     }
 }

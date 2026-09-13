@@ -10,11 +10,12 @@
 #define YELLOW_DARK    0xCD00
 
 #define ICON_Y    20
+#define ICON_Y2   80
 #define ICON_SIZE 32
 
-static const int icon_x[ICON_COUNT] = {10, 72, 134, 196, 258};
-static const int label_x[ICON_COUNT] = {6, 68, 118, 192, 254};
-static const char *icon_labels[ICON_COUNT] = {"My PC", "Files", "Settings", "Games", "Media"};
+static const int icon_x[ICON_COUNT] = {10, 72, 134, 196, 258, 10};
+static const int label_x[ICON_COUNT] = {6, 68, 118, 192, 254, 6};
+static const char *icon_labels[ICON_COUNT] = {"My PC", "Files", "Settings", "Games", "Media", "Calc"};
 
 static int cur_hover = -1;
 static char cur_wallpaper[64] = "";
@@ -145,7 +146,7 @@ void ui_draw_cursor(int x, int y) {
 /* ---------- Иконки: палитра из темы ---------- */
 
 static void draw_icon_art(int x, int y, int icon_id, const char *const *art) {
-    if (theme_icons_loaded()) {
+    if (theme_icons_loaded() && icon_id != ICON_CALC) {
         theme_icons_draw(icon_id, x, y);
     } else {
         const theme_t *T = theme_get();
@@ -191,6 +192,12 @@ static const char *const art_media[] = {
     ".KPPWWPPPPPPPPK.", ".KPPWPPPPPPPPPK.", ".KPPPPPPPPPPPPK.", ".KKKKKKKKKKKKKK.",
     "................", "................", "................", "................"
 };
+static const char *const art_calc[] = {
+    "................", ".KKKKKKKKKKKKKK.", ".KWWWWWWWWWWWWK.", ".KWBGGGGGGGGGBK.",
+    ".KWBGGGGGGGGGBK.", ".KWWWWWWWWWWWWK.", ".KKKKKKKKKKKKKK.", ".KDDKDDKDDKDDDK.",
+    ".KDDKDDKDDKDDDK.", ".KKKKKKKKKKKKKK.", ".KDDKDDKDDKDDDK.", ".KDDKDDKDDKDDDK.",
+    ".KKKKKKKKKKKKKK.", ".KDDKDDKDDKRRDK.", ".KKKKKKKKKKKKKK.", "................"
+};
 
 static uint8_t label_buf[64 * 2];
 
@@ -198,7 +205,7 @@ static void draw_label(int i) {
     const theme_t *T = theme_get();
     int len = (int)strlen(icon_labels[i]);
     int x = label_x[i];
-    int y = 56;
+    int y = (i < 5) ? 56 : 116;
     int w = len * 8;
 
     if (i == cur_hover) {
@@ -240,27 +247,30 @@ static void draw_label(int i) {
 
 static void draw_icon_body(int i) {
     int x = icon_x[i];
+    int y = (i < 5) ? ICON_Y : ICON_Y2;
     switch (i) {
-        case ICON_MY_PC:     draw_icon_art(x, ICON_Y, ICON_MY_PC, art_my_pc);     break;
-        case ICON_FILES:     draw_icon_art(x, ICON_Y, ICON_FILES, art_files);     break;
-        case ICON_SETTINGS:  draw_icon_art(x, ICON_Y, ICON_SETTINGS, art_settings);  break;
-        case ICON_GAMES:     draw_icon_art(x, ICON_Y, ICON_GAMES, art_games);     break;
-        case ICON_MEDIA:     draw_icon_art(x, ICON_Y, ICON_MEDIA, art_media);     break;
+        case ICON_MY_PC:     draw_icon_art(x, y, ICON_MY_PC, art_my_pc);     break;
+        case ICON_FILES:     draw_icon_art(x, y, ICON_FILES, art_files);     break;
+        case ICON_SETTINGS:  draw_icon_art(x, y, ICON_SETTINGS, art_settings);  break;
+        case ICON_GAMES:     draw_icon_art(x, y, ICON_GAMES, art_games);     break;
+        case ICON_MEDIA:     draw_icon_art(x, y, ICON_MEDIA, art_media);     break;
+        case ICON_CALC:      draw_icon_art(x, y, ICON_CALC, art_calc);      break;
     }
     if (i == cur_hover) {
-        st7789_draw_rect(x - 2, ICON_Y - 2, ICON_SIZE + 4, ICON_SIZE + 4, COLOR_WHITE);
+        st7789_draw_rect(x - 2, y - 2, ICON_SIZE + 4, ICON_SIZE + 4, COLOR_WHITE);
     }
 }
 
 void ui_draw_icon_cell(int i) {
     int x = icon_x[i];
+    int y_base = (i < 5) ? ICON_Y : ICON_Y2;
     int zl = label_x[i] - 2;
     int zi = x - 3;
     int zx = (zl < zi) ? zl : zi;
     int rl = label_x[i] + (int)strlen(icon_labels[i]) * 8 + 2;
     int ri = x + ICON_SIZE + 3;
     int zr = (rl > ri) ? rl : ri;
-    draw_bg_rect(zx, ICON_Y - 3, zr - zx, 48);
+    draw_bg_rect(zx, y_base - 3, zr - zx, 48);
     draw_icon_body(i);
     draw_label(i);
 }
@@ -281,10 +291,11 @@ void ui_refresh_hover(int new_hover) {
 void ui_invalidate_rect(int x, int y, int w, int h) {
     draw_bg_rect(x, y, w, h);
     for (int i = 0; i < ICON_COUNT; i++) {
-        int ix = icon_x[i] - 3, iy = ICON_Y - 3;
+        int iy_base = (i < 5) ? ICON_Y : ICON_Y2;
+        int ix = icon_x[i] - 3, iy = iy_base - 3;
         int iw = ICON_SIZE + 6, ih = ICON_SIZE + 6;
         if (x < ix + iw && x + w > ix && y < iy + ih && y + h > iy) draw_icon_body(i);
-        int lx = label_x[i] - 2, ly = 55;
+        int lx = label_x[i] - 2, ly = iy_base + ICON_SIZE + 3;
         int lw = (int)strlen(icon_labels[i]) * 8 + 4, lh = 11;
         if (x < lx + lw && x + w > lx && y < ly + lh && y + h > ly) draw_label(i);
     }
@@ -292,7 +303,8 @@ void ui_invalidate_rect(int x, int y, int w, int h) {
 
 int ui_hit_test(int cx, int cy) {
     for (int i = 0; i < ICON_COUNT; i++) {
-        if (cx >= icon_x[i] && cx < icon_x[i] + ICON_SIZE && cy >= ICON_Y && cy < ICON_Y + ICON_SIZE) return i;
+        int y = (i < 5) ? ICON_Y : ICON_Y2;
+        if (cx >= icon_x[i] && cx < icon_x[i] + ICON_SIZE && cy >= y && cy < y + ICON_SIZE) return i;
     }
     return -1;
 }
@@ -367,7 +379,7 @@ void ui_draw_about_window(void) {
     st7789_fill_rect(x, y + h - 1, w, 1, T->win_dark);
     st7789_fill_rect(x + w - 1, y, 1, h, T->win_dark);
 
-    draw_title_bar(x + 3, y + 3, w - 6, "About PhoenixOS v1.0-beta1");
+    draw_title_bar(x + 3, y + 3, w - 6, "About PhoenixOS v1.0-beta2");
 
     int ty = y + 24;
     st7789_draw_string(x + 8, ty, "MCU: RP2350 M33 x2", T->text, T->win_bg, 1);

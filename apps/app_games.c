@@ -5,6 +5,7 @@
 /* id ставит main.c после регистрации */
 app_id_t g_games_snake_id  = APP_INVALID;
 app_id_t g_games_tetris_id = APP_INVALID;
+app_id_t g_games_cube_id = APP_INVALID;
 
 static int g_sel = 0;
 
@@ -36,6 +37,8 @@ static void games_tick(const core_input_t *in, uint32_t delta_ms) {
             core_open(g_games_snake_id, 0);
         } else if (g_sel == 1 && g_games_tetris_id != APP_INVALID) {
             core_open(g_games_tetris_id, 0);
+        } else if (g_sel == 2 && g_games_cube_id != APP_INVALID) {
+            core_open(g_games_cube_id, 0);
         }
     }
 

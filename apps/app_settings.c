@@ -1,4 +1,7 @@
 #include "phoenix_core.h"
+
+#define SETTINGS_NAV_DELAY_MS 200
+static uint32_t settings_last_nav = 0;
 #include "ui.h"
 #include "settings.h"
 #include "theme.h"
@@ -55,23 +58,30 @@ static void settings_enter(int arg) {
 static void settings_tick(const core_input_t *in, uint32_t delta_ms) {
     int old_sel = set_sel;
 
-    if (in->nav_up && set_sel > 0) {
+    uint32_t now = core_now_ms();
+    bool nav_ok = (now - settings_last_nav >= SETTINGS_NAV_DELAY_MS);
+
+    if (in->nav_up && set_sel > 0 && nav_ok) {
         set_sel--;
+        settings_last_nav = now;
         buzzer_click();
         ui_settings_row(old_sel, set_sel, &g_settings);
         ui_settings_row(set_sel, set_sel, &g_settings);
-    } else if (in->nav_down && set_sel < SET_ROWS - 1) {
+    } else if (in->nav_down && set_sel < SET_ROWS - 1 && nav_ok) {
         set_sel++;
+        settings_last_nav = now;
         buzzer_click();
         ui_settings_row(old_sel, set_sel, &g_settings);
         ui_settings_row(set_sel, set_sel, &g_settings);
-    } else if (in->nav_left && set_sel < 4) {
+    } else if (in->nav_left && set_sel < 4 && nav_ok) {
         set_change(&g_settings, set_sel, -1);
+        settings_last_nav = now;
         buzzer_click();
         if (set_sel == 3) ui_draw_settings_window(set_sel, &g_settings);
         else ui_settings_row(set_sel, set_sel, &g_settings);
-    } else if (in->nav_right && set_sel < 4) {
+    } else if (in->nav_right && set_sel < 4 && nav_ok) {
         set_change(&g_settings, set_sel, +1);
+        settings_last_nav = now;
         buzzer_click();
         if (set_sel == 3) ui_draw_settings_window(set_sel, &g_settings);
         else ui_settings_row(set_sel, set_sel, &g_settings);
@@ -122,11 +132,16 @@ static void wp_tick(const core_input_t *in, uint32_t delta_ms) {
     bool applied = false;
     int total = wallpaper_count() + 1;
 
-    if (in->nav_up && wp_sel > 0) {
+    uint32_t now_wp = core_now_ms();
+    bool nav_ok_wp = (now_wp - settings_last_nav >= SETTINGS_NAV_DELAY_MS);
+
+    if (in->nav_up && wp_sel > 0 && nav_ok_wp) {
         wp_sel--;
+        settings_last_nav = now_wp;
         buzzer_click();
-    } else if (in->nav_down && wp_sel < total - 1) {
+    } else if (in->nav_down && wp_sel < total - 1 && nav_ok_wp) {
         wp_sel++;
+        settings_last_nav = now_wp;
         buzzer_click();
     }
 
@@ -181,11 +196,16 @@ static void cpu_tick(const core_input_t *in, uint32_t delta_ms) {
     int old_sel = cpu_sel;
     bool applied = false;
 
-    if (in->nav_up && cpu_sel > 0) {
+    uint32_t now_cpu = core_now_ms();
+    bool nav_ok_cpu = (now_cpu - settings_last_nav >= SETTINGS_NAV_DELAY_MS);
+
+    if (in->nav_up && cpu_sel > 0 && nav_ok_cpu) {
         cpu_sel--;
+        settings_last_nav = now_cpu;
         buzzer_click();
-    } else if (in->nav_down && cpu_sel < 4) {
+    } else if (in->nav_down && cpu_sel < 4 && nav_ok_cpu) {
         cpu_sel++;
+        settings_last_nav = now_cpu;
         buzzer_click();
     }
 

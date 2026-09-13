@@ -13,7 +13,8 @@
 #define ICON_SETTINGS 2
 #define ICON_GAMES    3
 #define ICON_MEDIA    4
-#define ICON_COUNT    5
+#define ICON_CALC     5
+#define ICON_COUNT    6
 
 #define UI_CURSOR_W 12
 #define UI_CURSOR_H 18
@@ -25,7 +26,7 @@
 
 #define WP_VISIBLE_ROWS 9
 
-#define GAMES_ROWS 2
+#define GAMES_ROWS 3
 
 void ui_draw_desktop(void);
 void ui_draw_taskbar(void);
