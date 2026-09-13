@@ -16,7 +16,7 @@ flash one UF2 file and get a tiny desktop computer.
 
 **Contents**
 
-- [What's New in v1.0-beta1](#whats-new-in-v10-beta1)
+- [What's New in v1.0-beta2](#whats-new-in-v10-beta2)
 - [Roadmap / Future Plans](#roadmap--future-plans)
 - [Feature Highlights](#feature-highlights)
 - [Hardware & Pinout](#hardware--pinout)
@@ -35,7 +35,7 @@ flash one UF2 file and get a tiny desktop computer.
 | Asset | Link |
 | --- | --- |
 | Firmware (UF2, flash-ready) | https://github.com/iOSVIDocumentation/PhoenixOS/releases/latest/download/PhoenixOS.uf2 |
-| Full source code (ZIP, v1.0-beta1) | https://github.com/iOSVIDocumentation/PhoenixOS/archive/refs/tags/v1.0-beta2.zip |
+| Full source code (ZIP, v1.0-beta2) | https://github.com/iOSVIDocumentation/PhoenixOS/archive/refs/tags/v1.0-beta2.zip |
 | Full source code (ZIP, main branch) | https://github.com/iOSVIDocumentation/PhoenixOS/archive/refs/heads/main.zip |
 | All releases | https://github.com/iOSVIDocumentation/PhoenixOS/releases |
 
@@ -67,30 +67,23 @@ make -j$(nproc)
 
 Firmware: build/PhoenixOS.uf2
 
-## What's New in v1.0-beta1
+## What's New in v1.0-beta2
 
-**Major milestone** — first beta of the 1.0 line with a new 3D demo app, display performance boost and gameplay fixes.
+**Quality-of-life release** — new Calculator app, second-row desktop icon
+and smoother settings navigation.
 
 ### New Apps
-- 🎲 **3D Test** — rotating wireframe cube with real-time FPS counter.
-  - Full 320×240 software framebuffer.
-  - Dynamic RAM allocation (`malloc`/`free`) — memory is held only while the app is active.
-  - Perspective projection, 3-axis rotation, Bresenham line drawing.
-  - Stable on-screen text (rendered into the framebuffer, no flicker).
+- 🧮 **Calculator** — expression-based calculator with dynamic memory.
+  - Single-line expression input (e.g. `3-4=` shows `-1`).
+  - Dynamic RAM allocation (`malloc`/`free`) — memory freed on app exit.
+  - Less sensitive joystick navigation (raw ADC thresholds 1500/2500).
+  - BACK exits to desktop; delta rendering (no display flicker).
 
-### Display & Drivers
-- **SPI0 baudrate raised from 10 MHz to 40 MHz** (stable) — display writes are ~4× faster.
-- Eliminated the white flash on boot and on app exit (fixed `st7789_init()` ordering: framebuffer is filled with black **before** the display command `0x29` turns the panel on).
-- New driver helper `st7789_write_full_frame()` for single bulk SPI transfers (used by future apps).
-
-### Games
-- 🐍 **Snake**: fixed impossible deaths near food — eating now requires an exact head-food overlap instead of a 1-cell radius. Tail-exclusion logic for self-collision is now correct again.
-
-### System
-- **Version bumped to v1.0-beta1** (displayed in the About window).
-- All local commits are now pushed to origin and a full source archive ships with the release.
-
----
+### Desktop & UX
+- Calculator icon on a **second desktop row** (first row layout unchanged).
+- Settings navigation slowed down (200 ms delay) for smoother
+  theme/brightness/sound/CPU/wallpaper adjustment.
+- Version bumped to v1.0-beta2 (About window).
 
 ## Roadmap / Future Plans
 
