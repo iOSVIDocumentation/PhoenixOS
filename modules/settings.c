@@ -47,7 +47,7 @@ void settings_load(settings_t *s) {
                 s->sound_enabled = (strcmp(val, "on") == 0);
             } else if (strcmp(key, "cpu") == 0) {
                 int v = atoi(val);
-                if (v == 150 || v == 200 || v == 225 || v == 250) s->cpu_mhz = (uint16_t)v;
+                if (v == 150 || v == 200 || v == 225 || v == 250 || v == 300) s->cpu_mhz = (uint16_t)v;
             } else if (strcmp(key, "theme") == 0) {
                 int v = atoi(val);
                 if (v >= 0 && v < THEME_COUNT) s->theme = (uint8_t)v;

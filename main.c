@@ -90,6 +90,7 @@ int main(void) {
     if (!safe_mode && g_settings.cpu_mhz != 150) {
         if (!core_set_cpu_mhz(g_settings.cpu_mhz)) {
             g_settings.cpu_mhz = 150;
+            settings_save(&g_settings);
         }
     }
 
