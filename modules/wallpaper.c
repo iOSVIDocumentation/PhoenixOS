@@ -1,6 +1,8 @@
 #include "wallpaper.h"
 #include "ff.h"
 #include "st7789.h"
+#include "logger.h"
+#include "pico/time.h"
 #include <string.h>
 
 #define WP_MAX       32
@@ -27,10 +29,15 @@ static bool ends_with_rgb(const char *n) {
 }
 
 int wallpaper_scan(void) {
+    uint32_t t0 = to_ms_since_boot(get_absolute_time());
     wp_count = 0;
     DIR dir;
     FILINFO fno;
-    if (f_opendir(&dir, "/wallpapers") != FR_OK) return 0;
+    FRESULT fr0 = f_opendir(&dir, "/wallpapers");
+    if (fr0 != FR_OK) {
+        LOG_ERROR(LOG_SUB_WALLPAPER, "scan_opendir_failed fr=%d", (int)fr0);
+        return 0;
+    }
     while (wp_count < WP_MAX) {
         if (f_readdir(&dir, &fno) != FR_OK || fno.fname[0] == 0) break;
         if (fno.fattrib & AM_DIR) continue;
@@ -51,6 +58,10 @@ int wallpaper_scan(void) {
         }
         strcpy(wp_names[j + 1], key);
     }
+
+    LOG_INFO(LOG_SUB_WALLPAPER, "scan count=%d ms=%lu",
+             wp_count,
+             (unsigned long)(to_ms_since_boot(get_absolute_time()) - t0));
     return wp_count;
 }
 
@@ -85,15 +96,28 @@ static void wp_window_row(int16_t x0, int16_t y, int16_t x1) {
 }
 
 bool wallpaper_draw(const char *path) {
+    uint32_t t0 = to_ms_since_boot(get_absolute_time());
     FIL f;
-    if (f_open(&f, path, FA_READ) != FR_OK) return false;
-    if (f_size(&f) < (FSIZE_t)(LCD_WIDTH * LCD_HEIGHT * 2)) {
+    FRESULT fr_open = f_open(&f, path, FA_READ);
+    if (fr_open != FR_OK) {
+        LOG_ERROR(LOG_SUB_WALLPAPER, "draw_open_failed path=%s fr=%d", path, (int)fr_open);
+        return false;
+    }
+
+    FSIZE_t sz = f_size(&f);
+    if (sz < (FSIZE_t)(LCD_WIDTH * LCD_HEIGHT * 2)) {
+        LOG_ERROR(LOG_SUB_WALLPAPER, "draw_too_small path=%s size=%lu expected=%u",
+                  path, (unsigned long)sz, (unsigned)(LCD_WIDTH * LCD_HEIGHT * 2));
         f_close(&f);
         return false;
     }
+
     for (int y = 0; y < LCD_HEIGHT; y++) {
         UINT br = 0;
-        if (f_read(&f, row_buf, WP_ROW_BYTES, &br) != FR_OK || br != WP_ROW_BYTES) {
+        FRESULT fr = f_read(&f, row_buf, WP_ROW_BYTES, &br);
+        if (fr != FR_OK || br != WP_ROW_BYTES) {
+            LOG_ERROR(LOG_SUB_WALLPAPER, "draw_read_failed path=%s y=%d fr=%d br=%u",
+                      path, y, (int)fr, (unsigned)br);
             f_close(&f);
             return false;
         }
@@ -103,30 +127,50 @@ bool wallpaper_draw(const char *path) {
         spi_write_blocking(LCD_SPI_PORT, row_buf, WP_ROW_BYTES);
         gpio_put(PIN_LCD_CS, 1);
     }
+
     f_close(&f);
+    LOG_INFO(LOG_SUB_WALLPAPER, "draw_ok path=%s ms=%lu",
+             path, (unsigned long)(to_ms_since_boot(get_absolute_time()) - t0));
     return true;
 }
 
 bool wallpaper_load(const char *path) {
+    uint32_t t0 = to_ms_since_boot(get_absolute_time());
     FIL f;
-    if (f_open(&f, path, FA_READ) != FR_OK) return false;
-    if (f_size(&f) < (FSIZE_t)(LCD_WIDTH * LCD_HEIGHT * 2)) {
+    FRESULT fr_open = f_open(&f, path, FA_READ);
+    if (fr_open != FR_OK) {
+        LOG_ERROR(LOG_SUB_WALLPAPER, "load_open_failed path=%s fr=%d", path, (int)fr_open);
+        return false;
+    }
+
+    FSIZE_t sz = f_size(&f);
+    if (sz < (FSIZE_t)(LCD_WIDTH * LCD_HEIGHT * 2)) {
+        LOG_ERROR(LOG_SUB_WALLPAPER, "load_too_small path=%s size=%lu expected=%u",
+                  path, (unsigned long)sz, (unsigned)(LCD_WIDTH * LCD_HEIGHT * 2));
         f_close(&f);
         return false;
     }
+
     UINT br = 0;
     FRESULT fr = f_read(&f, wp_cache, sizeof(wp_cache), &br);
     f_close(&f);
     if (fr != FR_OK || br != sizeof(wp_cache)) {
         wp_loaded = false;
+        LOG_ERROR(LOG_SUB_WALLPAPER, "load_read_failed path=%s fr=%d br=%u expected=%u",
+                  path, (int)fr, (unsigned)br, (unsigned)sizeof(wp_cache));
         return false;
     }
+
     wp_loaded = true;
+    LOG_INFO(LOG_SUB_WALLPAPER, "load_ok path=%s bytes=%u ms=%lu",
+             path, (unsigned)br,
+             (unsigned long)(to_ms_since_boot(get_absolute_time()) - t0));
     return true;
 }
 
 void wallpaper_unload(void) {
     wp_loaded = false;
+    LOG_DEBUG(LOG_SUB_WALLPAPER, "unload");
 }
 
 bool wallpaper_is_loaded(void) {

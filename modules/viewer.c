@@ -1,6 +1,8 @@
 #include "viewer.h"
 #include "ff.h"
 #include "st7789.h"
+#include "logger.h"
+#include "pico/time.h"
 #include <string.h>
 
 #define VIEWER_BUF_SIZE  16384
@@ -28,6 +30,7 @@ static bool has_ext(const char *name, const char *ext) {
 }
 
 bool viewer_open(const char *path) {
+    uint32_t t0 = to_ms_since_boot(get_absolute_time());
     const char *slash = strrchr(path, '/');
     const char *name = slash ? slash + 1 : path;
 
@@ -36,15 +39,25 @@ bool viewer_open(const char *path) {
     for (int i = 0; i < 8; i++) {
         if (has_ext(name, exts[i])) { ok = true; break; }
     }
-    if (!ok) return false;
+    if (!ok) {
+        LOG_DEBUG(LOG_SUB_VIEWER, "reject_ext path=%s", path);
+        return false;
+    }
 
     FIL f;
-    if (f_open(&f, path, FA_READ) != FR_OK) return false;
+    FRESULT fro = f_open(&f, path, FA_READ);
+    if (fro != FR_OK) {
+        LOG_ERROR(LOG_SUB_VIEWER, "open_failed path=%s fr=%d", path, (int)fro);
+        return false;
+    }
 
     UINT br = 0;
     FRESULT fr = f_read(&f, vbuf, VIEWER_BUF_SIZE - 1, &br);
     f_close(&f);
-    if (fr != FR_OK) return false;
+    if (fr != FR_OK) {
+        LOG_ERROR(LOG_SUB_VIEWER, "read_failed path=%s fr=%d", path, (int)fr);
+        return false;
+    }
     vbuf[br] = 0;
 
     vline_count = 0;
@@ -75,6 +88,10 @@ bool viewer_open(const char *path) {
 
     strncpy(vtitle, name, sizeof(vtitle) - 1);
     vtitle[sizeof(vtitle) - 1] = 0;
+
+    LOG_INFO(LOG_SUB_VIEWER, "opened path=%s bytes=%u lines=%d ms=%lu",
+             path, (unsigned)br, vline_count,
+             (unsigned long)(to_ms_since_boot(get_absolute_time()) - t0));
     return true;
 }
 
