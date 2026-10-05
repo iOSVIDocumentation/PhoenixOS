@@ -18,6 +18,12 @@ typedef struct {
     fm_entry_t items[FM_MAX_ENTRIES];
     int count;
     char cwd[FM_PATH_LEN];
+
+    /* Cache for parent directory to avoid re-reading from SD on go_up */
+    fm_entry_t parent_items[FM_MAX_ENTRIES];
+    int parent_count;
+    char parent_cwd[FM_PATH_LEN];
+    bool has_parent_cache;
 } fm_state_t;
 
 void fm_init(fm_state_t *st);

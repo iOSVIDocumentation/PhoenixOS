@@ -64,11 +64,36 @@ bool fm_enter(fm_state_t *st, int idx) {
     } else {
         snprintf(newpath, sizeof(newpath), "%s/%s", st->cwd, st->items[idx].name);
     }
-    return fm_open_dir(st, newpath);
+
+    /* Backup current state before attempting to enter */
+    fm_state_t backup = *st;
+
+    bool ok = fm_open_dir(st, newpath);
+    if (ok) {
+        /* Success: save the backup as the parent cache */
+        memcpy(st->parent_items, backup.items, sizeof(st->items));
+        st->parent_count = backup.count;
+        strncpy(st->parent_cwd, backup.cwd, FM_PATH_LEN);
+        st->has_parent_cache = true;
+    } else {
+        /* Failure: restore state to avoid leaving fm_state_t broken */
+        *st = backup;
+    }
+    return ok;
 }
 
 bool fm_go_up(fm_state_t *st) {
     if (strcmp(st->cwd, "/") == 0) return false;
+
+    /* Use cache if available to avoid re-reading from SD */
+    if (st->has_parent_cache) {
+        memcpy(st->items, st->parent_items, sizeof(st->items));
+        st->count = st->parent_count;
+        strncpy(st->cwd, st->parent_cwd, FM_PATH_LEN);
+        st->has_parent_cache = false; /* Cache consumed */
+        return true;
+    }
+
     char newpath[FM_PATH_LEN];
     strncpy(newpath, st->cwd, FM_PATH_LEN - 1);
     newpath[FM_PATH_LEN - 1] = 0;
