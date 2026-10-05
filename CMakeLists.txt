@@ -39,6 +39,7 @@ add_executable(PhoenixOS
     modules/sysinfo.c
     modules/theme.c
     modules/theme_icons.c
+    modules/logger.c
     modules/sound.c
     modules/hw_config.c
 )
