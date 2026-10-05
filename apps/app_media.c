@@ -5,6 +5,7 @@
 #include "sound_svc.h"
 #include "st7789.h"
 #include "ff.h"
+#include "logger.h"
 #include "hardware/spi.h"
 #include "pico/multicore.h"
 #include <string.h>
@@ -81,10 +82,23 @@ static void core1_worker(void) {
                             c1_note_idx = 0;
                             c1_note_end = 0;
                             c1_audio = (audio != 0 && c1_audio_count != 0);
+                            LOG_INFO(LOG_SUB_MEDIA,
+                                     "pvx_open path=%s %ux%u fps=%u frames=%lu audio=%u audio_notes=%lu",
+                                     path,
+                                     (unsigned)w, (unsigned)h, (unsigned)fps,
+                                     (unsigned long)c1_frames,
+                                     c1_audio ? 1u : 0u,
+                                     (unsigned long)c1_audio_count);
                         } else {
+                            LOG_ERROR(LOG_SUB_MEDIA,
+                                      "pvx_bad_dims path=%s %ux%u fps=%u frames=%lu",
+                                      path,
+                                      (unsigned)w, (unsigned)h, (unsigned)fps,
+                                      (unsigned long)c1_frames);
                             f_close(&pf);
                         }
                     } else {
+                        LOG_ERROR(LOG_SUB_MEDIA, "pvx_bad_header path=%s", path);
                         f_close(&pf);
                     }
                 }
@@ -100,10 +114,20 @@ static void core1_worker(void) {
                 if (f_lseek(&pf, 24 + idx * FRAME_SZ) == FR_OK &&
                     f_read(&pf, frame_buf[slot], FRAME_SZ, &br) == FR_OK && br == FRAME_SZ) {
                     ok = 1;
+                    LOG_TRACE(LOG_SUB_MEDIA, "frame_read idx=%lu slot=%lu bytes=%u",
+                              (unsigned long)idx, (unsigned long)slot, (unsigned)br);
+                } else {
+                    LOG_ERROR(LOG_SUB_MEDIA, "frame_read_failed idx=%lu slot=%lu br=%u",
+                              (unsigned long)idx, (unsigned long)slot, (unsigned)br);
                 }
                 multicore_fifo_push_blocking(ok);
             } else if (cmd == CMD_STOP) {
-                if (c1_open) { f_close(&pf); c1_open = false; }
+                if (c1_open) {
+                    LOG_INFO(LOG_SUB_MEDIA, "core1_close file frames_read=%lu",
+                             (unsigned long)c1_frames);
+                    f_close(&pf);
+                    c1_open = false;
+                }
                 c1_audio = false;
                 sound_svc_tone_off();
                 multicore_fifo_push_blocking(1);
@@ -122,6 +146,11 @@ static void core1_worker(void) {
                         if (du == 0) du = 100;
                         sound_svc_movie_note(fq, du);
                         c1_note_end = now + du;
+                        LOG_TRACE(LOG_SUB_MEDIA, "audio_note idx=%lu freq=%u dur=%u",
+                                  (unsigned long)c1_note_idx, fq, du);
+                    } else {
+                        LOG_WARN(LOG_SUB_MEDIA, "audio_note_read_failed idx=%lu br=%u",
+                                 (unsigned long)c1_note_idx, (unsigned)br);
                     }
                     c1_note_idx++;
                 }
@@ -215,6 +244,8 @@ static void draw_frame(const uint8_t *src_all) {
 }
 
 static bool media_start(void) {
+    LOG_INFO(LOG_SUB_MEDIA, "start path=%s", play_path);
+    logger_suspend_sd();
     multicore_fifo_push_blocking(CMD_OPEN);
     multicore_fifo_push_blocking((uint32_t)play_path);
     uint32_t ok = multicore_fifo_pop_blocking();
@@ -233,9 +264,12 @@ static bool media_start(void) {
     multicore_fifo_push_blocking(0);
     multicore_fifo_push_blocking(0);
     if (!multicore_fifo_pop_blocking()) {
+        LOG_ERROR(LOG_SUB_MEDIA, "start_failed prefetch path=%s", play_path);
         multicore_fifo_push_blocking(CMD_STOP);
         multicore_fifo_pop_blocking();
         spi_set_baudrate(spi0, 10 * 1000 * 1000);
+        logger_resume_sd();
+        logger_flush_now();
         return false;
     }
     cur_slot = 0;
@@ -243,14 +277,20 @@ static bool media_start(void) {
     frame_time = to_ms_since_boot(get_absolute_time());
     playing = true;
     st7789_fill(COLOR_BLACK);
+    LOG_INFO(LOG_SUB_MEDIA, "started fps=%u frames=%lu lcd=%uHz",
+             pv_fps, (unsigned long)pv_frames, MV_LCD_HZ / 1000000u);
     return true;
 }
 
 static void media_stop(void) {
     if (playing) {
+        LOG_INFO(LOG_SUB_MEDIA, "stop frame=%lu/%lu",
+                 (unsigned long)pv_frame_idx, (unsigned long)pv_frames);
         multicore_fifo_push_blocking(CMD_STOP);
         multicore_fifo_pop_blocking();
         playing = false;
+        logger_resume_sd();
+        logger_flush_now();
     }
     spi_set_baudrate(spi0, 10 * 1000 * 1000);
     st7789_display_on();

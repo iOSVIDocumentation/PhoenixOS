@@ -163,7 +163,7 @@ static bool logger_try_open(void) {
         exists = false;
     }
 
-    FRESULT fr = f_open(&g_file, "/logs/system.log", FA_WRITE | FA_OPEN_APPEND);
+    FRESULT fr = f_open(&g_file, "/logs/system.log", FA_WRITE | FA_OPEN_ALWAYS);
     if (fr != FR_OK) {
         return false;
     }
