@@ -1,6 +1,6 @@
 # PhoenixOS
 
-[![Version](https://img.shields.io/badge/version-v1.0--beta2-blueviolet)](../../releases)
+[![Version](https://img.shields.io/badge/version-v1.0--beta3-blueviolet)](../../releases)
 [![MCU](https://img.shields.io/badge/MCU-RP2350%20%7C%20dual%20Cortex--M33-green)](https://www.raspberrypi.com/products/rp2350/)
 [![Language](https://img.shields.io/badge/language-C99-orange)]()
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue)](#license)
@@ -16,7 +16,7 @@ flash one UF2 file and get a tiny desktop computer.
 
 **Contents**
 
-- [What's New in v1.0-beta2](#whats-new-in-v10-beta2)
+- [What's New in v1.0-beta3](#whats-new-in-v10-beta3)
 - [Roadmap / Future Plans](#roadmap--future-plans)
 - [Feature Highlights](#feature-highlights)
 - [Hardware & Pinout](#hardware--pinout)
@@ -35,7 +35,7 @@ flash one UF2 file and get a tiny desktop computer.
 | Asset | Link |
 | --- | --- |
 | Firmware (UF2, flash-ready) | https://github.com/iOSVIDocumentation/PhoenixOS/releases/latest/download/PhoenixOS.uf2 |
-| Full source code (ZIP, v1.0-beta2) | https://github.com/iOSVIDocumentation/PhoenixOS/archive/refs/tags/v1.0-beta2.zip |
+| Full source code (ZIP, v1.0-beta3) | https://github.com/iOSVIDocumentation/PhoenixOS/archive/refs/tags/v1.0-beta3.zip |
 | Full source code (ZIP, main branch) | https://github.com/iOSVIDocumentation/PhoenixOS/archive/refs/heads/main.zip |
 | All releases | https://github.com/iOSVIDocumentation/PhoenixOS/releases |
 
@@ -67,23 +67,42 @@ make -j$(nproc)
 
 Firmware: build/PhoenixOS.uf2
 
-## What's New in v1.0-beta2
+## What's New in v1.0-beta3
 
-**Quality-of-life release** — new Calculator app, second-row desktop icon
-and smoother settings navigation.
+**Overclock, safety and diagnostics release.**
 
-### New Apps
-- 🧮 **Calculator** — expression-based calculator with dynamic memory.
-  - Single-line expression input (e.g. `3-4=` shows `-1`).
-  - Dynamic RAM allocation (`malloc`/`free`) — memory freed on app exit.
-  - Less sensitive joystick navigation (raw ADC thresholds 1500/2500).
-  - BACK exits to desktop; delta rendering (no display flicker).
+### CPU & Safety
+- Added **300 MHz** experimental CPU option.
+- 300 MHz runs at **stock voltage only** — no voltage increase.
+- Added watchdog step-down protection:
+  - if the board reboots by watchdog while overclocked, CPU frequency automatically steps down one level;
+  - safe frequency is saved to `phoenix.cfg`.
+- Tightened thermal guard for 300 MHz:
+  - 300 MHz rolls back at **60 °C**;
+  - other frequencies keep the **65 °C** limit.
+- Failed overclock attempts no longer create a boot loop.
 
-### Desktop & UX
-- Calculator icon on a **second desktop row** (first row layout unchanged).
-- Settings navigation slowed down (200 ms delay) for smoother
-  theme/brightness/sound/CPU/wallpaper adjustment.
-- Version bumped to v1.0-beta2 (About window).
+### Display & Storage
+- Raised display SPI0 from **40 MHz to 55 MHz**.
+- Added file-manager parent-directory cache:
+  - pressing BACK now returns from RAM;
+  - removes SD-card stalls during folder navigation.
+- Updated `FatFs_SPI` submodule with RP2350 RTC fallback and temperature sensor calibration.
+
+### Logging & Diagnostics
+- Added asynchronous system logger with RAM ring buffers.
+- Detailed logs are stored on SD card:
+  - `/logs/system.log`
+  - `/logs/system.log.1`
+  - `/logs/system.log.2`
+  - `/logs/system.log.3`
+- Log rotation is enabled at 128 KiB per file.
+- Logger covers boot, watchdog, thermal, settings, file manager, viewer, wallpaper, sound, display and media player.
+- During PVX playback, SD log writes are suspended to avoid competing with media streaming.
+- Legacy `/reset.log` remains available as a short boot/reset journal.
+
+### System
+- Version bumped to **v1.0-beta3** in the About window.
 
 ## Roadmap / Future Plans
 
@@ -101,7 +120,7 @@ What we want to tackle in upcoming releases (post-1.0 GA):
 
 - **Dual-core kernel**
   - *Core 0 (master):* 100 Hz loop, input, ST7789 rendering, apps,
-    hardware watchdog (1.5 s), thermal guard (65 °C).
+    hardware watchdog (1.5 s), thermal guard (65 °C; 60 °C at 300 MHz).
   - *Core 1 (service):* PVX media stream (30 fps), PWM sound service,
     heartbeat.
   - *IPC:* multicore FIFO (media), lock-free queue (sound), FatFs mutex.
@@ -204,10 +223,12 @@ Full wiring notes: `PINOUT.md`.
     |-- config.txt       board marker ("System OK")
     |-- phoenix.cfg      settings (safe defaults, auto-created)
     |-- snake.hi         Snake high scores (classic / maze)
-    +-- reset.log        boot/reset journal (diagnostics)
+    |-- logs/
+|   `-- system.log   detailed system log (rotated)
+`-- reset.log        boot/reset journal (diagnostics)
 
 `phoenix.cfg` keys: `bright` (25/50/75/100), `cursor` (1–3),
-`sound` (on/off), `cpu` (150/200/225/250), `theme` (0/1/2),
+`sound` (on/off), `cpu` (150/200/225/250/300), `theme` (0/1/2),
 `wallpaper` (path or empty).
 
 </details>
@@ -228,7 +249,7 @@ Full wiring notes: `PINOUT.md`.
     drivers/       board.h (single source of truth for pins),
                    st7789, buzzer, joystick, buttons
     modules/       ui (themed renderer), settings, themes, theme icons,
-                   wallpaper, files, viewer, sysinfo, sound
+                   wallpaper, files, viewer, sysinfo, sound, logger
     fatfs_lib/     FatFs_SPI submodule
 
 </details>
@@ -259,6 +280,24 @@ Hold **BOOTSEL**, plug the board in, copy `build/PhoenixOS.uf2` to the
 
 <details>
 <summary>🕰️ <b>v1.0-beta1 / v0.9.8 / v0.9.7 / v0.9.6 / v0.9.5 / v0.9.3 (open)</b></summary>
+
+### v1.0-beta3
+
+- Added 300 MHz experimental CPU option (stock voltage only).
+- Hardened overclock protections:
+  - CPU frequency range validation;
+  - watchdog step-down after unstable overclock;
+  - stricter 60 °C thermal limit at 300 MHz;
+  - persisted safe fallback.
+- Raised display SPI0 from 40 MHz to 55 MHz.
+- Added file-manager parent-directory cache to avoid SD re-reads on BACK.
+- Added asynchronous detailed system logger:
+  - `/logs/system.log` with rotation;
+  - boot, watchdog, thermal, settings, files, viewer, wallpaper, sound, display and media logging;
+  - SD log writes suspended during PVX playback.
+- Updated FatFs_SPI submodule for RP2350 RTC fallback and temperature calibration.
+- Normalized v1.0-beta1 release notes to English.
+- Version bumped to v1.0-beta3 (About window).
 
 ### v1.0-beta2
 
