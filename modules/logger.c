@@ -173,7 +173,8 @@ static bool logger_try_open(void) {
     return true;
 }
 
-void logger_init(void) {
+void logger_early_init(void) {
+    if (g_initialized) return;
     memset(g_rings, 0, sizeof(g_rings));
     g_initialized = true;
     g_file_open = false;
@@ -182,6 +183,10 @@ void logger_init(void) {
     g_bytes_written = 0;
     g_last_flush = 0;
     g_min_level = LOG_LVL_DEBUG;
+}
+
+void logger_init(void) {
+    logger_early_init();
     logger_try_open();
 }
 

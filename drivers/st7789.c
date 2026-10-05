@@ -1,4 +1,5 @@
 #include "st7789.h"
+#include "logger.h"
 #include "hardware/clocks.h"
 
 static uint pwm_slice_num;
@@ -83,11 +84,18 @@ static void lcd_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {
 
 void st7789_set_backlight(uint8_t percent) {
     if (percent > 100) percent = 100;
+    static uint8_t last_percent = 255;
+    if (percent != last_percent) {
+        LOG_DEBUG(LOG_SUB_DISPLAY, "backlight percent=%u duty=%u",
+                  (unsigned)percent, (unsigned)((percent * 10000) / 100));
+        last_percent = percent;
+    }
     uint16_t duty = (percent * 10000) / 100;
     pwm_set_gpio_level(PIN_LCD_BLK, duty);
 }
 
 void st7789_init(void) {
+    LOG_INFO(LOG_SUB_DISPLAY, "init begin spi=%uMHz", 55u);
     gpio_init(PIN_LCD_CS);
     gpio_set_dir(PIN_LCD_CS, GPIO_OUT);
     gpio_put(PIN_LCD_CS, 1);
@@ -102,6 +110,7 @@ void st7789_init(void) {
 
     spi_init(LCD_SPI_PORT, 55 * 1000 * 1000);
     spi_set_format(LCD_SPI_PORT, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
+    LOG_DEBUG(LOG_SUB_DISPLAY, "spi_ready port=%u baud=55000000", (unsigned)LCD_SPI_PORT);
     gpio_set_function(PIN_LCD_SCK, GPIO_FUNC_SPI);
     gpio_set_function(PIN_LCD_MOSI, GPIO_FUNC_SPI);
 
@@ -129,6 +138,8 @@ void st7789_init(void) {
     st7789_fill(0x0000);
 
     st7789_set_backlight(100);
+    LOG_INFO(LOG_SUB_DISPLAY, "init done resolution=%ux%u",
+             (unsigned)LCD_WIDTH, (unsigned)LCD_HEIGHT);
 }
 
 void st7789_fill(uint16_t color) { st7789_fill_rect(0, 0, LCD_WIDTH, LCD_HEIGHT, color); }
@@ -251,6 +262,7 @@ uint8_t st7789_font_row(char ch, uint8_t row) {
 }
 
 void st7789_display_on(void) {
+    LOG_DEBUG(LOG_SUB_DISPLAY, "display_on");
     lcd_write_cmd(0x11);
     sleep_ms(10);
     lcd_write_cmd(0x29);

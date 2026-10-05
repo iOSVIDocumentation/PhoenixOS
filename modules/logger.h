@@ -33,6 +33,7 @@ typedef enum {
 } log_subsys_t;
 
 uint8_t logger_core_id(void);
+void logger_early_init(void);
 void logger_init(void);
 void logger_tick(void);
 void logger_flush_now(void);

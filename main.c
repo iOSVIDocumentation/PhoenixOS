@@ -38,6 +38,8 @@ static const char *reset_reason_str(void) {
 int main(void) {
     stdio_init_all();
 
+    logger_early_init();
+
     st7789_init();
     buzzer_init();
     adc_init();
