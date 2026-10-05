@@ -532,8 +532,8 @@ void ui_draw_wallpaper_picker(int sel, int scroll, const char *current) {
     st7789_draw_string_fast(4, 200, "OK: apply  BACK: return", T->text, T->win_bg, 39);
 }
 
-static const char *cpu_labels[5] = {"150 MHz (Stock)", "200 MHz", "225 MHz", "250 MHz", "Continue"};
-static const uint16_t cpu_mhz_vals[4] = {150, 200, 225, 250};
+static const char *cpu_labels[6] = {"150 MHz (Stock)", "200 MHz", "225 MHz", "250 MHz", "300 MHz", "Continue"};
+static const uint16_t cpu_mhz_vals[5] = {150, 200, 225, 250, 300};
 
 static void draw_cpu_row(int row, int sel, uint16_t current) {
     const theme_t *T = theme_get();
@@ -543,7 +543,7 @@ static void draw_cpu_row(int row, int sel, uint16_t current) {
     st7789_fill_rect(3, y, 314, 20, bg);
 
     char line[24];
-    if (row < 4) {
+    if (row < 5) {
         snprintf(line, sizeof(line), "%c %s", (current == cpu_mhz_vals[row]) ? '*' : ' ', cpu_labels[row]);
     } else {
         snprintf(line, sizeof(line), "  %s", cpu_labels[row]);
@@ -558,7 +558,7 @@ void ui_draw_cpu_menu(int sel, uint16_t current) {
     st7789_fill_rect(0, 0, 320, 216, T->win_bg);
     draw_title_bar(0, 0, 320, "CPU Speed");
     st7789_fill_rect(2, 18, 316, 104, T->list_bg);
-    for (int row = 0; row < 5; row++) draw_cpu_row(row, sel, current);
+    for (int row = 0; row < 6; row++) draw_cpu_row(row, sel, current);
     st7789_draw_string_fast(4, 200, "OK: apply  BACK: return", T->text, T->win_bg, 39);
 }
 

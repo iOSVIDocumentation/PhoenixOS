@@ -183,12 +183,12 @@ const phoenix_app_t app_wallpaper = {
     .on_tick = wp_tick,
 };
 
-static const uint16_t cpu_opts[4] = {150, 200, 225, 250};
-static int cpu_sel = 4;
+static const uint16_t cpu_opts[5] = {150, 200, 225, 250, 300};
+static int cpu_sel = 5;
 
 static void cpu_enter(int arg) {
     (void)arg;
-    cpu_sel = 4;
+    cpu_sel = 5;
     ui_draw_cpu_menu(cpu_sel, g_settings.cpu_mhz);
 }
 
@@ -203,14 +203,14 @@ static void cpu_tick(const core_input_t *in, uint32_t delta_ms) {
         cpu_sel--;
         settings_last_nav = now_cpu;
         buzzer_click();
-    } else if (in->nav_down && cpu_sel < 4 && nav_ok_cpu) {
+    } else if (in->nav_down && cpu_sel < 5 && nav_ok_cpu) {
         cpu_sel++;
         settings_last_nav = now_cpu;
         buzzer_click();
     }
 
     if (in->ok_pressed) {
-        if (cpu_sel == 4) {
+        if (cpu_sel == 5) {
             buzzer_click();
             core_open(APP_SETTINGS, 1);
             return;
