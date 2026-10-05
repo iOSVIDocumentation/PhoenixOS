@@ -6,3 +6,5 @@ build_doom/
 _deps/
 .DS_Store
 Thumbs.db
+/dist/
+*.tar.gz

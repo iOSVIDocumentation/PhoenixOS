@@ -127,9 +127,9 @@ What we want to tackle in upcoming releases (post-1.0 GA):
 - **Apps:** desktop with cursor & icons, Start menu, file manager, viewer,
   control panel, wallpaper picker, CPU manager, system monitor, PVX media
   player, Snake and Tetris.
-- **Safety:** watchdog, core-1 heartbeat supervision, thermal rollback to
+- **Safety:** watchdog, core-1 heartbeat supervision, thermal rollback to 150 MHz, watchdog step-down after unstable overclock, safe mode (hold BACK at power-on), detailed system logging.
   150 MHz, safe mode (hold BACK at power-on).
-- **Performance:** stock 150 MHz or overclock 200 / 225 / 250 MHz,
+- **Performance:** stock 150 MHz or overclock 200 / 225 / 250 / 300 MHz, persisted in config.
   persisted in config.
 
 ---
@@ -279,7 +279,7 @@ Hold **BOOTSEL**, plug the board in, copy `build/PhoenixOS.uf2` to the
 ## Changelog
 
 <details>
-<summary>🕰️ <b>v1.0-beta1 / v0.9.8 / v0.9.7 / v0.9.6 / v0.9.5 / v0.9.3 (open)</b></summary>
+<summary>🕰 <b>v1.0-beta3 / v1.0-beta2 / v1.0-beta1 / v0.9.8 / v0.9.7 / v0.9.6 / v0.9.5 / v0.9.3 (open)</b></summary>
 
 ### v1.0-beta3
 
