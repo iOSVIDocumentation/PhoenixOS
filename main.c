@@ -76,6 +76,14 @@ int main(void) {
     }
 
     settings_load(&g_settings);
+    /* WDT step-down: prevent overclock crash loop */
+    if (!safe_mode && (watchdog_enable_caused_reboot() || watchdog_caused_reboot()) && g_settings.cpu_mhz > 150) {
+        if (g_settings.cpu_mhz >= 300) g_settings.cpu_mhz = 250;
+        else if (g_settings.cpu_mhz >= 250) g_settings.cpu_mhz = 225;
+        else if (g_settings.cpu_mhz >= 225) g_settings.cpu_mhz = 200;
+        else g_settings.cpu_mhz = 150;
+        settings_save(&g_settings);
+    }
     if (safe_mode) {
         g_settings.cpu_mhz = 150;
         g_settings.theme = THEME_PHOENIX;

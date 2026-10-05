@@ -557,7 +557,7 @@ void ui_draw_cpu_menu(int sel, uint16_t current) {
     const theme_t *T = theme_get();
     st7789_fill_rect(0, 0, 320, 216, T->win_bg);
     draw_title_bar(0, 0, 320, "CPU Speed");
-    st7789_fill_rect(2, 18, 316, 104, T->list_bg);
+    st7789_fill_rect(2, 18, 316, 124, T->list_bg);
     for (int row = 0; row < 6; row++) draw_cpu_row(row, sel, current);
     st7789_draw_string_fast(4, 200, "OK: apply  BACK: return", T->text, T->win_bg, 39);
 }

@@ -35,6 +35,7 @@ void core_log(const char *msg) {
 }
 
 bool core_set_cpu_mhz(uint16_t mhz) {
+    if (mhz < 150 || mhz > 300) return false;
     if (!set_sys_clock_khz((uint32_t)mhz * 1000, true)) return false;
     spi_set_baudrate(spi0, 55 * 1000 * 1000);
     spi_set_baudrate(spi1, 12500000);
@@ -60,7 +61,8 @@ static void thermal_guard(void) {
     uint32_t raw = adc_read();
     int32_t mv = (int32_t)(raw * 3300) / 4095;
     int32_t t = 27 - ((mv - 706) * 1000) / 1710;
-    if (t > 65) {
+    int32_t temp_limit = (g_settings.cpu_mhz >= 300) ? 60 : 65;
+    if (t > temp_limit) {
         g_settings.cpu_mhz = 150;
         settings_save(&g_settings);
         watchdog_reboot(0, 0, 0);
