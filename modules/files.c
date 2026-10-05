@@ -2,6 +2,8 @@
 #include "ff.h"
 #include <string.h>
 #include <stdio.h>
+#include "logger.h"
+#include "pico/time.h"
 
 static bool fm_entry_after(const fm_entry_t *a, const fm_entry_t *b) {
     if (a->is_dir != b->is_dir) return !a->is_dir;
@@ -24,9 +26,13 @@ bool fm_open_dir(fm_state_t *st, const char *path) {
     DIR dir;
     FILINFO fno;
     st->count = 0;
+    uint32_t t0 = to_ms_since_boot(get_absolute_time());
 
     FRESULT fr = f_opendir(&dir, path);
-    if (fr != FR_OK) return false;
+    if (fr != FR_OK) {
+        LOG_ERROR(LOG_SUB_FILES, "opendir_failed path=%s fr=%d", path, (int)fr);
+        return false;
+    }
 
     while (st->count < FM_MAX_ENTRIES) {
         fr = f_readdir(&dir, &fno);
@@ -47,6 +53,10 @@ bool fm_open_dir(fm_state_t *st, const char *path) {
 
     strncpy(st->cwd, path, FM_PATH_LEN - 1);
     st->cwd[FM_PATH_LEN - 1] = 0;
+
+    LOG_DEBUG(LOG_SUB_FILES, "open_dir path=%s entries=%d ms=%lu",
+              path, st->count,
+              (unsigned long)(to_ms_since_boot(get_absolute_time()) - t0));
     return true;
 }
 
@@ -57,7 +67,11 @@ void fm_init(fm_state_t *st) {
 }
 
 bool fm_enter(fm_state_t *st, int idx) {
-    if (idx < 0 || idx >= st->count || !st->items[idx].is_dir) return false;
+    if (idx < 0 || idx >= st->count || !st->items[idx].is_dir) {
+        LOG_WARN(LOG_SUB_FILES, "enter_invalid idx=%d count=%d", idx, st->count);
+        return false;
+    }
+
     char newpath[FM_PATH_LEN];
     if (strcmp(st->cwd, "/") == 0) {
         snprintf(newpath, sizeof(newpath), "/%s", st->items[idx].name);
@@ -65,25 +79,35 @@ bool fm_enter(fm_state_t *st, int idx) {
         snprintf(newpath, sizeof(newpath), "%s/%s", st->cwd, st->items[idx].name);
     }
 
-    /* Backup current state before attempting to enter */
-    fm_state_t backup = *st;
+    LOG_DEBUG(LOG_SUB_FILES, "enter path=%s", newpath);
+
+    /*
+     * Static backup avoids putting the whole ~5 KB fm_state_t on the stack.
+     * File manager runs only on core 0, so this is safe here.
+     */
+    static fm_state_t backup;
+    memcpy(&backup, st, sizeof(backup));
 
     bool ok = fm_open_dir(st, newpath);
     if (ok) {
-        /* Success: save the backup as the parent cache */
         memcpy(st->parent_items, backup.items, sizeof(st->items));
         st->parent_count = backup.count;
         strncpy(st->parent_cwd, backup.cwd, FM_PATH_LEN);
         st->has_parent_cache = true;
+        LOG_DEBUG(LOG_SUB_FILES, "enter_ok cached_parent entries=%d", backup.count);
     } else {
-        /* Failure: restore state to avoid leaving fm_state_t broken */
-        *st = backup;
+        memcpy(st, &backup, sizeof(*st));
+        LOG_WARN(LOG_SUB_FILES, "enter_failed restored path=%s", newpath);
     }
+
     return ok;
 }
 
 bool fm_go_up(fm_state_t *st) {
-    if (strcmp(st->cwd, "/") == 0) return false;
+    if (strcmp(st->cwd, "/") == 0) {
+        LOG_DEBUG(LOG_SUB_FILES, "go_up_root");
+        return false;
+    }
 
     /* Use cache if available to avoid re-reading from SD */
     if (st->has_parent_cache) {
@@ -91,14 +115,21 @@ bool fm_go_up(fm_state_t *st) {
         st->count = st->parent_count;
         strncpy(st->cwd, st->parent_cwd, FM_PATH_LEN);
         st->has_parent_cache = false; /* Cache consumed */
+        LOG_DEBUG(LOG_SUB_FILES, "go_up_cache_hit path=%s entries=%d",
+                  st->cwd, st->count);
         return true;
     }
+
+    LOG_DEBUG(LOG_SUB_FILES, "go_up_cache_miss path=%s", st->cwd);
 
     char newpath[FM_PATH_LEN];
     strncpy(newpath, st->cwd, FM_PATH_LEN - 1);
     newpath[FM_PATH_LEN - 1] = 0;
     char *slash = strrchr(newpath, '/');
-    if (slash == NULL) return false;
+    if (slash == NULL) {
+        LOG_WARN(LOG_SUB_FILES, "go_up_bad_path path=%s", st->cwd);
+        return false;
+    }
     if (slash == newpath) {
         newpath[1] = 0;
     } else {

@@ -6,6 +6,7 @@
 #include "hardware/spi.h"
 #include "pico/time.h"
 #include "fs_mutex.h"
+#include "logger.h"
 #include "ff.h"
 #include <string.h>
 #include <stdio.h>
@@ -24,21 +25,22 @@ static uint32_t last_tick_ms = 0;
 #define WATCHDOG_TIMEOUT_MS 1500
 
 void core_log(const char *msg) {
-    FIL f;
-    if (f_open(&f, "/reset.log", FA_WRITE | FA_OPEN_APPEND) != FR_OK) return;
-    char line[128];
-    int n = snprintf(line, sizeof(line), "t=%lu %s\n",
-                     (unsigned long)to_ms_since_boot(get_absolute_time()), msg);
-    UINT bw = 0;
-    f_write(&f, line, n, &bw);
-    f_close(&f);
+    LOG_INFO(LOG_SUB_BOOT, "%s", msg ? msg : "(null)");
 }
 
 bool core_set_cpu_mhz(uint16_t mhz) {
-    if (mhz < 150 || mhz > 300) return false;
-    if (!set_sys_clock_khz((uint32_t)mhz * 1000, true)) return false;
+    LOG_DEBUG(LOG_SUB_CORE, "cpu_set requested=%uMHz", mhz);
+    if (mhz < 150 || mhz > 300) {
+        LOG_ERROR(LOG_SUB_CORE, "cpu_set invalid=%uMHz", mhz);
+        return false;
+    }
+    if (!set_sys_clock_khz((uint32_t)mhz * 1000, true)) {
+        LOG_ERROR(LOG_SUB_CORE, "cpu_set pll_failed=%uMHz", mhz);
+        return false;
+    }
     spi_set_baudrate(spi0, 55 * 1000 * 1000);
     spi_set_baudrate(spi1, 12500000);
+    LOG_INFO(LOG_SUB_CORE, "cpu_set ok=%uMHz spi0=55MHz spi1=12.5MHz", mhz);
     return true;
 }
 
@@ -48,8 +50,20 @@ static uint8_t hb_bad = 0;
 static void thermal_guard(void) {
     uint32_t hb = g_core1_heartbeat;
     if (hb == last_hb) {
-        if (++hb_bad >= 3) watchdog_reboot(0, 0, 0);
+        if (++hb_bad >= 3) {
+            LOG_ERROR(LOG_SUB_WDT, "core1_heartbeat_timeout hb=%lu bad=%u",
+                      (unsigned long)hb, hb_bad);
+            logger_flush_now();
+            watchdog_reboot(0, 0, 0);
+        } else if (hb_bad == 1) {
+            LOG_WARN(LOG_SUB_WDT, "core1_heartbeat_stalled hb=%lu",
+                     (unsigned long)hb);
+        }
     } else {
+        if (hb_bad) {
+            LOG_DEBUG(LOG_SUB_WDT, "core1_heartbeat_recovered hb=%lu",
+                      (unsigned long)hb);
+        }
         hb_bad = 0;
     }
     last_hb = hb;
@@ -62,9 +76,23 @@ static void thermal_guard(void) {
     int32_t mv = (int32_t)(raw * 3300) / 4095;
     int32_t t = 27 - ((mv - 706) * 1000) / 1710;
     int32_t temp_limit = (g_settings.cpu_mhz >= 300) ? 60 : 65;
+
+    static uint32_t last_temp_log = 0;
+    if (t >= temp_limit - 5 || now - last_temp_log >= 10000) {
+        LOG_DEBUG(LOG_SUB_THERMAL,
+                  "temp=%dC limit=%dC cpu=%uMHz raw=%lu mv=%ld",
+                  (int)t, (int)temp_limit, g_settings.cpu_mhz,
+                  (unsigned long)raw, (long)mv);
+        last_temp_log = now;
+    }
+
     if (t > temp_limit) {
+        LOG_ERROR(LOG_SUB_THERMAL,
+                  "thermal_rollback temp=%dC limit=%dC cpu=%uMHz -> 150MHz",
+                  (int)t, (int)temp_limit, g_settings.cpu_mhz);
         g_settings.cpu_mhz = 150;
         settings_save(&g_settings);
+        logger_flush_now();
         watchdog_reboot(0, 0, 0);
     }
 }
@@ -96,7 +124,12 @@ app_id_t core_find(const char *name) {
 }
 
 void core_open(app_id_t id, int arg) {
-    if ((int)id < 0 || (int)id >= CORE_MAX_APPS || apps[id] == NULL) return;
+    if ((int)id < 0 || (int)id >= CORE_MAX_APPS || apps[id] == NULL) {
+        LOG_WARN(LOG_SUB_APP, "open_invalid id=%d arg=%d", (int)id, arg);
+        return;
+    }
+    LOG_DEBUG(LOG_SUB_APP, "open id=%d name=%s arg=%d",
+              (int)id, apps[id]->name ? apps[id]->name : "?", arg);
     pending = id;
     pending_arg = arg;
 }
@@ -144,6 +177,7 @@ void core_start(app_id_t initial) {
 
     while (true) {
         watchdog_update();
+        logger_tick();
 
         core_input_t in;
         core_poll_input(&in);
@@ -157,10 +191,14 @@ void core_start(app_id_t initial) {
         }
 
         if (pending != APP_INVALID && apps[pending] != NULL) {
+            const char *from_name = (apps[cur] && apps[cur]->name) ? apps[cur]->name : "?";
+            const char *to_name = (apps[pending] && apps[pending]->name) ? apps[pending]->name : "?";
+            int arg = pending_arg;
+            LOG_DEBUG(LOG_SUB_APP, "switch from=%s to=%s arg=%d",
+                      from_name, to_name, arg);
             if (apps[cur]->on_exit) apps[cur]->on_exit();
             cur = pending;
             pending = APP_INVALID;
-            int arg = pending_arg;
             pending_arg = 0;
             apps[cur]->on_enter(arg);
             if (consumed) {

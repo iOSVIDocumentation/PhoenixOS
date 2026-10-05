@@ -15,6 +15,7 @@
 #include "phoenix_core.h"
 #include "hardware/watchdog.h"
 #include "sysinfo.h"
+#include "logger.h"
 
 extern const phoenix_app_t app_snake;
 extern const phoenix_app_t app_games;
@@ -52,9 +53,15 @@ int main(void) {
     sd_card_t *pSD = sd_get_by_num(0);
     static FATFS fs;
     FRESULT fr = f_mount(&fs, pSD->pcName, 1);
+    logger_init();
+    LOG_INFO(LOG_SUB_BOOT, "sd_mount fr=%d ok=%d", (int)fr, fr == FR_OK);
+
     if (fr == FR_OK) {
+        LOG_INFO(LOG_SUB_BOOT, "provision_start");
         provision_sd_card();
+        LOG_INFO(LOG_SUB_BOOT, "provision_done");
         theme_icons_provision();
+        LOG_INFO(LOG_SUB_BOOT, "theme_icons_provision_done");
 
         /* журнал причин перезагрузки */
         FIL lf;
@@ -69,22 +76,33 @@ int main(void) {
             f_close(&lf);
         }
         ui_bootscreen_status("Scanning SD free space...", BOOT_GREEN);
+        LOG_INFO(LOG_SUB_SD, "sd_scan_start");
         sysinfo_sd_scan();
+        LOG_INFO(LOG_SUB_SD, "sd_scan_done");
         buzzer_success();
     } else {
+        LOG_ERROR(LOG_SUB_SD, "sd_mount_failed fr=%d", (int)fr);
         buzzer_error();
     }
 
     settings_load(&g_settings);
+    LOG_INFO(LOG_SUB_BOOT, "reset_reason=%s safe_mode=%d cpu=%u",
+             reset_reason_str(), safe_mode, g_settings.cpu_mhz);
+
     /* WDT step-down: prevent overclock crash loop */
     if (!safe_mode && (watchdog_enable_caused_reboot() || watchdog_caused_reboot()) && g_settings.cpu_mhz > 150) {
+        uint16_t old_cpu = g_settings.cpu_mhz;
         if (g_settings.cpu_mhz >= 300) g_settings.cpu_mhz = 250;
         else if (g_settings.cpu_mhz >= 250) g_settings.cpu_mhz = 225;
         else if (g_settings.cpu_mhz >= 225) g_settings.cpu_mhz = 200;
         else g_settings.cpu_mhz = 150;
+        LOG_WARN(LOG_SUB_WDT, "watchdog_stepdown old=%u new=%u",
+                 old_cpu, g_settings.cpu_mhz);
         settings_save(&g_settings);
     }
+
     if (safe_mode) {
+        LOG_WARN(LOG_SUB_BOOT, "safe_mode_enabled force_cpu=150 force_theme=phoenix");
         g_settings.cpu_mhz = 150;
         g_settings.theme = THEME_PHOENIX;
         settings_save(&g_settings);
@@ -97,10 +115,17 @@ int main(void) {
 
     if (!safe_mode && g_settings.cpu_mhz != 150) {
         if (!core_set_cpu_mhz(g_settings.cpu_mhz)) {
+            LOG_ERROR(LOG_SUB_CORE, "cpu_set_failed requested=%u fallback=150",
+                      g_settings.cpu_mhz);
             g_settings.cpu_mhz = 150;
             settings_save(&g_settings);
         }
     }
+
+    LOG_INFO(LOG_SUB_BOOT, "boot_complete cpu=%u bright=%u theme=%u sound=%d",
+             g_settings.cpu_mhz, g_settings.brightness,
+             g_settings.theme, g_settings.sound_enabled);
+    logger_flush_now();
 
     sleep_ms(1500);
 

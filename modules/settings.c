@@ -6,6 +6,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "logger.h"
 
 static void defaults(settings_t *s) {
     s->brightness = 100;
@@ -19,7 +20,10 @@ static void defaults(settings_t *s) {
 void settings_load(settings_t *s) {
     defaults(s);
     FIL f;
-    if (f_open(&f, SETTINGS_PATH, FA_READ) != FR_OK) return;
+    if (f_open(&f, SETTINGS_PATH, FA_READ) != FR_OK) {
+        LOG_WARN(LOG_SUB_CFG, "config_missing path=%s", SETTINGS_PATH);
+        return;
+    }
     char buf[256];
     UINT br = 0;
     f_read(&f, buf, sizeof(buf) - 1, &br);
@@ -59,11 +63,20 @@ void settings_load(settings_t *s) {
         if (!eol) break;
         p = eol + 1;
     }
+
+    LOG_INFO(LOG_SUB_CFG,
+             "loaded cpu=%u bright=%u cursor=%u sound=%d theme=%u wallpaper=%s",
+             s->cpu_mhz, s->brightness, s->cursor_speed,
+             s->sound_enabled, s->theme,
+             s->wallpaper[0] ? s->wallpaper : "(none)");
 }
 
 void settings_save(const settings_t *s) {
     FIL f;
-    if (f_open(&f, SETTINGS_PATH, FA_WRITE | FA_CREATE_ALWAYS) != FR_OK) return;
+    if (f_open(&f, SETTINGS_PATH, FA_WRITE | FA_CREATE_ALWAYS) != FR_OK) {
+        LOG_ERROR(LOG_SUB_CFG, "config_save_open_failed path=%s", SETTINGS_PATH);
+        return;
+    }
     char buf[224];
     int n = snprintf(buf, sizeof(buf), "bright=%u\ncursor=%u\nsound=%s\ncpu=%u\ntheme=%u\nwallpaper=%s\n",
                      s->brightness, s->cursor_speed,
@@ -72,9 +85,18 @@ void settings_save(const settings_t *s) {
     UINT bw = 0;
     f_write(&f, buf, n, &bw);
     f_close(&f);
+
+    LOG_INFO(LOG_SUB_CFG,
+             "saved cpu=%u bright=%u cursor=%u sound=%d theme=%u wallpaper=%s bytes=%u",
+             s->cpu_mhz, s->brightness, s->cursor_speed,
+             s->sound_enabled, s->theme,
+             s->wallpaper[0] ? s->wallpaper : "(none)",
+             (unsigned)bw);
 }
 
 void settings_apply(const settings_t *s) {
+    LOG_DEBUG(LOG_SUB_CFG, "apply theme=%u bright=%u sound=%d",
+              s->theme, s->brightness, s->sound_enabled);
     theme_set(s->theme);
     st7789_set_backlight(s->brightness);
     buzzer_set_enabled(s->sound_enabled);
