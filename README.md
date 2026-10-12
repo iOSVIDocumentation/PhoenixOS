@@ -16,7 +16,7 @@ flash one UF2 file and get a tiny desktop computer.
 
 **Contents**
 
-- [What's New in v1.0-beta3](#whats-new-in-v10-beta3)
+- [What's New in v1.0-beta4](#whats-new-in-v10-beta3)
 - [Roadmap / Future Plans](#roadmap--future-plans)
 - [Feature Highlights](#feature-highlights)
 - [Hardware & Pinout](#hardware--pinout)
@@ -35,7 +35,7 @@ flash one UF2 file and get a tiny desktop computer.
 | Asset | Link |
 | --- | --- |
 | Firmware (UF2, flash-ready) | https://github.com/iOSVIDocumentation/PhoenixOS/releases/latest/download/PhoenixOS.uf2 |
-| Full source code (ZIP, v1.0-beta3) | https://github.com/iOSVIDocumentation/PhoenixOS/archive/refs/tags/v1.0-beta3.zip |
+| Full source code (ZIP, v1.0-beta4) | https://github.com/iOSVIDocumentation/PhoenixOS/archive/refs/tags/v1.0-beta4.zip |
 | Full source code (ZIP, main branch) | https://github.com/iOSVIDocumentation/PhoenixOS/archive/refs/heads/main.zip |
 | All releases | https://github.com/iOSVIDocumentation/PhoenixOS/releases |
 
@@ -67,7 +67,7 @@ make -j$(nproc)
 
 Firmware: build/PhoenixOS.uf2
 
-## What's New in v1.0-beta3
+## What's New in v1.0-beta4
 
 **Overclock, safety and diagnostics release.**
 
@@ -102,7 +102,7 @@ Firmware: build/PhoenixOS.uf2
 - Legacy `/reset.log` remains available as a short boot/reset journal.
 
 ### System
-- Version bumped to **v1.0-beta3** in the About window.
+- Version bumped to **v1.0-beta4** in the About window.
 
 ## Roadmap / Future Plans
 
@@ -279,9 +279,9 @@ Hold **BOOTSEL**, plug the board in, copy `build/PhoenixOS.uf2` to the
 ## Changelog
 
 <details>
-<summary>🕰 <b>v1.0-beta3 / v1.0-beta2 / v1.0-beta1 / v0.9.8 / v0.9.7 / v0.9.6 / v0.9.5 / v0.9.3 (open)</b></summary>
+<summary>🕰 <b>v1.0-beta4 / v1.0-beta2 / v1.0-beta1 / v0.9.8 / v0.9.7 / v0.9.6 / v0.9.5 / v0.9.3 (open)</b></summary>
 
-### v1.0-beta3
+### v1.0-beta4
 
 - Added 300 MHz experimental CPU option (stock voltage only).
 - Hardened overclock protections:
@@ -297,7 +297,7 @@ Hold **BOOTSEL**, plug the board in, copy `build/PhoenixOS.uf2` to the
   - SD log writes suspended during PVX playback.
 - Updated FatFs_SPI submodule for RP2350 RTC fallback and temperature calibration.
 - Normalized v1.0-beta1 release notes to English.
-- Version bumped to v1.0-beta3 (About window).
+- Version bumped to v1.0-beta4 (About window).
 
 ### v1.0-beta2
 
