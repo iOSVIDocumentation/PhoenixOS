@@ -1,5 +1,6 @@
 #include "phoenix_core.h"
 #include "ui.h"
+#include "logger.h"
 #include "buzzer.h"
 #include "st7789.h"
 #include "hardware/watchdog.h"
