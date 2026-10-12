@@ -147,6 +147,7 @@ static void core_poll_input(core_input_t *in) {
     in->start_pressed = button_was_pressed(BTN_START);
     in->ok_pressed    = button_was_pressed(BTN_OK) || sw_edge;
     in->back_pressed  = button_was_pressed(BTN_BACK);
+    if (in->back_pressed) core_log("BACK_PRESSED_DETECTED");
 
     in->dx = (in->raw.x < 1800) ? -1 : (in->raw.x > 2200) ? 1 : 0;
     in->dy = (in->raw.y < 1800) ? -1 : (in->raw.y > 2200) ? 1 : 0;

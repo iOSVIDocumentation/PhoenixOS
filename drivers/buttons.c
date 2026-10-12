@@ -2,7 +2,7 @@
 
 static const uint btn_pins[BTN_COUNT] = {BTN_START, BTN_OK, BTN_BACK};
 
-static bool last_state[BTN_COUNT] = {true, true, true};
+static bool last_state[BTN_COUNT] = {false, false, false};
 static uint32_t last_time[BTN_COUNT] = {0, 0, 0};
 
 static int gpio_to_index(uint gpio) {
