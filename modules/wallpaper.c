@@ -95,6 +95,17 @@ static void wp_window_row(int16_t x0, int16_t y, int16_t x1) {
     wp_cmd(0x2C);
 }
 
+/* FIX: Устанавливаем окно SPI один раз для всего прямоугольника */
+static void wp_set_window(int16_t x0, int16_t y0, int16_t x1, int16_t y1) {
+    wp_cmd(0x2A);
+    wp_data(x0 >> 8); wp_data(x0 & 0xFF);
+    wp_data(x1 >> 8); wp_data(x1 & 0xFF);
+    wp_cmd(0x2B);
+    wp_data(y0 >> 8); wp_data(y0 & 0xFF);
+    wp_data(y1 >> 8); wp_data(y1 & 0xFF);
+    wp_cmd(0x2C);
+}
+
 bool wallpaper_draw(const char *path) {
     uint32_t t0 = to_ms_since_boot(get_absolute_time());
     FIL f;
@@ -112,21 +123,23 @@ bool wallpaper_draw(const char *path) {
         return false;
     }
 
+    /* FIX: Устанавливаем окно SPI один раз для всего экрана и выносим CS/DC за цикл */
+    wp_set_window(0, 0, LCD_WIDTH - 1, LCD_HEIGHT - 1);
+    gpio_put(PIN_LCD_DC, 1);
+    gpio_put(PIN_LCD_CS, 0);
     for (int y = 0; y < LCD_HEIGHT; y++) {
         UINT br = 0;
         FRESULT fr = f_read(&f, row_buf, WP_ROW_BYTES, &br);
         if (fr != FR_OK || br != WP_ROW_BYTES) {
+            gpio_put(PIN_LCD_CS, 1);
             LOG_ERROR(LOG_SUB_WALLPAPER, "draw_read_failed path=%s y=%d fr=%d br=%u",
                       path, y, (int)fr, (unsigned)br);
             f_close(&f);
             return false;
         }
-        wp_window_row(0, y, LCD_WIDTH - 1);
-        gpio_put(PIN_LCD_DC, 1);
-        gpio_put(PIN_LCD_CS, 0);
         spi_write_blocking(LCD_SPI_PORT, row_buf, WP_ROW_BYTES);
-        gpio_put(PIN_LCD_CS, 1);
     }
+    gpio_put(PIN_LCD_CS, 1);
 
     f_close(&f);
     LOG_INFO(LOG_SUB_WALLPAPER, "draw_ok path=%s ms=%lu",
@@ -184,15 +197,16 @@ void wallpaper_blit_rect(int x, int y, int w, int h) {
     if (y + h > LCD_HEIGHT) h = LCD_HEIGHT - y;
     if (w <= 0 || h <= 0) return;
 
+    /* FIX: Устанавливаем окно SPI один раз для всего прямоугольника */
+    wp_set_window(x, y, x + w - 1, y + h - 1);
+    gpio_put(PIN_LCD_DC, 1);
+    gpio_put(PIN_LCD_CS, 0);
     for (int row = y; row < y + h; row++) {
-        wp_window_row(x, row, x + w - 1);
-        gpio_put(PIN_LCD_DC, 1);
-        gpio_put(PIN_LCD_CS, 0);
         spi_write_blocking(LCD_SPI_PORT,
                            &wp_cache[row * LCD_WIDTH * 2 + x * 2],
                            (size_t)w * 2);
-        gpio_put(PIN_LCD_CS, 1);
     }
+    gpio_put(PIN_LCD_CS, 1);
 }
 
 void wallpaper_blit_to_buf(uint8_t *dst, int x, int y, int w) {
