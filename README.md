@@ -16,7 +16,7 @@ flash one UF2 file and get a tiny desktop computer.
 
 **Contents**
 
-- [What's New in v1.0-beta4](#whats-new-in-v10-beta3)
+- [What's New in v1.0-beta4](#whats-new-in-v10-beta4)
 - [Roadmap / Future Plans](#roadmap--future-plans)
 - [Feature Highlights](#feature-highlights)
 - [Hardware & Pinout](#hardware--pinout)
@@ -282,6 +282,17 @@ Hold **BOOTSEL**, plug the board in, copy `build/PhoenixOS.uf2` to the
 <summary>🕰 <b>v1.0-beta4 / v1.0-beta2 / v1.0-beta1 / v0.9.8 / v0.9.7 / v0.9.6 / v0.9.5 / v0.9.3 (open)</b></summary>
 
 ### v1.0-beta4
+- **Core**: Fixed main loop 100% CPU load and cursor freeze by correcting `delta_ms` calculation after `sleep_until`.
+- **Core**: Added safe thermal reboot (100ms delay) to prevent SD card FAT corruption during watchdog reset.
+- **Core**: Added NULL pointer check for SD card during boot to prevent HardFault crashes.
+- **Drivers**: Optimized SPI display rendering (`st7789_fill_rect` and wallpapers) to set the window once per rectangle, drastically improving UI speed.
+- **Drivers**: Fixed button debounce initial state (changed from `true` to `false`) to ensure the first "Back" press is registered.
+- **Modules**: Fixed log rotation failure by adding `f_unlink` before `f_rename` in `logger.c`.
+- **Modules**: Added bounds checking to `label_buf` in `ui.c` to prevent buffer overflow.
+- **Apps**: Replaced calculator linear parser with a Recursive Descent parser to correctly respect math operator precedence.
+- **Apps**: Added `logger_flush_now()` before system reboot from the Start Menu.
+
+### v1.0-beta3
 
 - Added 300 MHz experimental CPU option (stock voltage only).
 - Hardened overclock protections:
