@@ -90,7 +90,7 @@ void st7789_set_backlight(uint8_t percent) {
                   (unsigned)percent, (unsigned)((percent * 10000) / 100));
         last_percent = percent;
     }
-    uint16_t duty = (percent * 10000) / 100;
+    uint16_t duty = percent * 100;
     pwm_set_gpio_level(PIN_LCD_BLK, duty);
 }
 
@@ -145,6 +145,9 @@ void st7789_init(void) {
 void st7789_fill(uint16_t color) { st7789_fill_rect(0, 0, LCD_WIDTH, LCD_HEIGHT, color); }
 
 void st7789_fill_rect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) {
+    /* FIX: Корректный клиппинг отрицательных координат во избежание uint16_t overflow */
+    if (x < 0) { w += x; x = 0; }
+    if (y < 0) { h += y; y = 0; }
     if ((x >= LCD_WIDTH) || (y >= LCD_HEIGHT)) return;
     if ((x + w - 1) >= LCD_WIDTH) w = LCD_WIDTH - x;
     if ((y + h - 1) >= LCD_HEIGHT) h = LCD_HEIGHT - y;
@@ -155,13 +158,15 @@ void st7789_fill_rect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color
         fill_buf[2 * i] = color >> 8;
         fill_buf[2 * i + 1] = color & 0xFF;
     }
-    for (int16_t row = y; row < y + h; row++) {
-        lcd_set_window(x, row, x + w - 1, row);
-        gpio_put(PIN_LCD_DC, 1);
-        lcd_cs_select();
+    
+    /* FIX: Устанавливаем окно ОДИН РАЗ на весь прямоугольник, вместо установки для каждой строки */
+    lcd_set_window(x, y, x + w - 1, y + h - 1);
+    gpio_put(PIN_LCD_DC, 1);
+    lcd_cs_select();
+    for (int16_t row = 0; row < h; row++) {
         spi_write_blocking(LCD_SPI_PORT, fill_buf, (size_t)w * 2);
-        lcd_cs_deselect();
     }
+    lcd_cs_deselect();
 }
 
 void st7789_draw_pixel(int16_t x, int16_t y, uint16_t color) {
