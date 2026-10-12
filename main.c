@@ -54,7 +54,7 @@ int main(void) {
 
     sd_card_t *pSD = sd_get_by_num(0);
     static FATFS fs;
-    FRESULT fr = f_mount(&fs, pSD->pcName, 1);
+    FRESULT fr = pSD ? f_mount(&fs, pSD->pcName, 1) : FR_NOT_READY;
     logger_init();
     LOG_INFO(LOG_SUB_BOOT, "sd_mount fr=%d ok=%d", (int)fr, fr == FR_OK);
 

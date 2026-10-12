@@ -93,7 +93,9 @@ static void thermal_guard(void) {
         g_settings.cpu_mhz = 150;
         settings_save(&g_settings);
         logger_flush_now();
-        watchdog_reboot(0, 0, 0);
+        /* FIX: Даем файловой системе время завершить I/O перед перезагрузкой */
+        watchdog_enable(100, true);
+        while (1) { sleep_ms(10); }
     }
 }
 
@@ -215,9 +217,13 @@ void core_start(app_id_t initial) {
         uint32_t now_ms = to_ms_since_boot(get_absolute_time());
         uint32_t delta_ms = (last_tick_ms == 0) ? 16 : (now_ms - last_tick_ms);
         if (delta_ms > 100) delta_ms = 100;
-        last_tick_ms = now_ms;
 
         apps[cur]->on_tick(&in, delta_ms);
-        sleep_until(last_tick_ms * 1000);
+
+        /* FIX: Ограничиваем частоту главного цикла ~60 FPS (16 мс) для экономии CPU и снижения нагрева */
+        uint32_t next_tick_ms = (last_tick_ms == 0) ? now_ms + 16 : last_tick_ms + 16;
+        sleep_until(next_tick_ms * 1000);
+        
+        last_tick_ms = to_ms_since_boot(get_absolute_time());
     }
 }
