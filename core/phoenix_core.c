@@ -221,9 +221,8 @@ void core_start(app_id_t initial) {
         apps[cur]->on_tick(&in, delta_ms);
 
         /* FIX: Ограничиваем частоту главного цикла ~60 FPS (16 мс) для экономии CPU и снижения нагрева */
-        uint32_t next_tick_ms = (last_tick_ms == 0) ? now_ms + 16 : last_tick_ms + 16;
-        sleep_until(next_tick_ms * 1000);
-        
-        last_tick_ms = to_ms_since_boot(get_absolute_time());
+        /* Обновляем last_tick_ms ПЕРЕД сном, чтобы дельта в следующем тике считалась корректно */
+        last_tick_ms = now_ms;
+        sleep_until((now_ms + 16) * 1000);
     }
 }
