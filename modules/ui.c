@@ -204,6 +204,8 @@ static uint8_t label_buf[64 * 2];
 static void draw_label(int i) {
     const theme_t *T = theme_get();
     int len = (int)strlen(icon_labels[i]);
+    /* FIX: Защита от переполнения label_buf (максимум 8 символов = 64 пикселя) */
+    if (len > 8) len = 8;
     int x = label_x[i];
     int y = (i < 5) ? 56 : 116;
     int w = len * 8;
