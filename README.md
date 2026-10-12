@@ -1,6 +1,6 @@
 # PhoenixOS
 
-[![Version](https://img.shields.io/badge/version-v1.0--beta3-blueviolet)](../../releases)
+[![Version](https://img.shields.io/badge/version-v1.0--beta4.1-blueviolet)](../../releases)
 [![MCU](https://img.shields.io/badge/MCU-RP2350%20%7C%20dual%20Cortex--M33-green)](https://www.raspberrypi.com/products/rp2350/)
 [![Language](https://img.shields.io/badge/language-C99-orange)]()
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue)](#license)
@@ -35,7 +35,7 @@ flash one UF2 file and get a tiny desktop computer.
 | Asset | Link |
 | --- | --- |
 | Firmware (UF2, flash-ready) | https://github.com/iOSVIDocumentation/PhoenixOS/releases/latest/download/PhoenixOS.uf2 |
-| Full source code (ZIP, v1.0-beta4) | https://github.com/iOSVIDocumentation/PhoenixOS/archive/refs/tags/v1.0-beta4.zip |
+| Full source code (ZIP, v1.0-beta4.1) | https://github.com/iOSVIDocumentation/PhoenixOS/archive/refs/tags/v1.0-beta4.1.zip |
 | Full source code (ZIP, main branch) | https://github.com/iOSVIDocumentation/PhoenixOS/archive/refs/heads/main.zip |
 | All releases | https://github.com/iOSVIDocumentation/PhoenixOS/releases |
 
@@ -67,42 +67,18 @@ make -j$(nproc)
 
 Firmware: build/PhoenixOS.uf2
 
-## What's New in v1.0-beta4
+## What's New in v1.0-beta4.1
 
-**Overclock, safety and diagnostics release.**
+Hotfix release on top of the v1.0-beta4 code audit: restores cursor movement and full display bandwidth at overclocked CPU clocks, fixes theme-switch navigation and first-press button registration, and stops false CPU downclocking after watchdog reboots.
 
-### CPU & Safety
-- Added **300 MHz** experimental CPU option.
-- 300 MHz runs at **stock voltage only** — no voltage increase.
-- Added watchdog step-down protection:
-  - if the board reboots by watchdog while overclocked, CPU frequency automatically steps down one level;
-  - safe frequency is saved to `phoenix.cfg`.
-- Tightened thermal guard for 300 MHz:
-  - 300 MHz rolls back at **60 °C**;
-  - other frequencies keep the **65 °C** limit.
-- Failed overclock attempts no longer create a boot loop.
+- **Cursor**: fixed frame-time (delta_ms) bookkeeping after the main-loop sleep cap; cursor moves again at all CPU frequencies.
+- **Display bandwidth**: clk_peri is re-anchored to clk_sys after runtime CPU clock changes; SPI0 no longer falls back to 24 MHz, 3D Test runs at full speed at 200-300 MHz.
+- **Navigation**: vertical and horizontal joystick debounce timers separated; theme switching with left/right works again.
+- **Buttons**: debounce initial state corrected; first Back press after boot is registered.
+- **CPU stability**: false watchdog step-down disabled; selected CPU frequency persists across reboots.
+- **Diagnostics**: 3D Test logs FPS, flush time and actual SPI clock once per second to /logs/system.log.
 
-### Display & Storage
-- Raised display SPI0 from **40 MHz to 55 MHz**.
-- Added file-manager parent-directory cache:
-  - pressing BACK now returns from RAM;
-  - removes SD-card stalls during folder navigation.
-- Updated `FatFs_SPI` submodule with RP2350 RTC fallback and temperature sensor calibration.
-
-### Logging & Diagnostics
-- Added asynchronous system logger with RAM ring buffers.
-- Detailed logs are stored on SD card:
-  - `/logs/system.log`
-  - `/logs/system.log.1`
-  - `/logs/system.log.2`
-  - `/logs/system.log.3`
-- Log rotation is enabled at 128 KiB per file.
-- Logger covers boot, watchdog, thermal, settings, file manager, viewer, wallpaper, sound, display and media player.
-- During PVX playback, SD log writes are suspended to avoid competing with media streaming.
-- Legacy `/reset.log` remains available as a short boot/reset journal.
-
-### System
-- Version bumped to **v1.0-beta4** in the About window.
+Full v1.0-beta4 audit changes (performance, safety, bug fixes) are listed in the Changelog below.
 
 ## Roadmap / Future Plans
 
@@ -279,9 +255,28 @@ Hold **BOOTSEL**, plug the board in, copy `build/PhoenixOS.uf2` to the
 ## Changelog
 
 <details>
-<summary>🕰 <b>v1.0-beta4 / v1.0-beta2 / v1.0-beta1 / v0.9.8 / v0.9.7 / v0.9.6 / v0.9.5 / v0.9.3 (open)</b></summary>
+<summary>🕰 <b>v1.0-beta4.1 / v1.0-beta4 / v1.0-beta3 / v1.0-beta2 / v1.0-beta1 / v0.9.8 / v0.9.7 / v0.9.6 / v0.9.5 / v0.9.3 (open)</b></summary>
+
+### v1.0-beta4.1
+- **Core**: fixed frame-time (delta_ms) bookkeeping after the main-loop sleep cap (cursor freeze).
+- **Core**: clk_peri re-anchored to clk_sys after runtime CPU clock changes; SPI0 no longer drops to 24 MHz at 200-300 MHz.
+- **Core**: separate vertical/horizontal joystick navigation debounce timers.
+- **Drivers**: button debounce initial state fixed (first Back press registered after boot).
+- **Main**: false watchdog step-down disabled; CPU frequency no longer silently downclocks after reboots.
+- **Apps**: 3D Test logs FPS, flush time and actual SPI clock once per second.
 
 ### v1.0-beta4
+- **Core**: main loop capped at ~60 FPS with proper sleep; eliminated 100% CPU idle burn and excess heating.
+- **Core**: safe thermal reboot with 100 ms grace period so SD card I/O completes before watchdog reset.
+- **Core**: NULL check for SD card handle at boot to prevent HardFault without a card.
+- **Drivers**: st7789_fill_rect sets the SPI window once per rectangle; added negative-coordinate clipping.
+- **Modules**: wallpaper blit/full-draw set the SPI window once per operation.
+- **Modules**: logger rotation fixed (f_unlink before f_rename, no more FR_EXIST failures).
+- **Modules**: label_buf bounds check in UI icon labels.
+- **Apps**: calculator rewritten with a recursive-descent parser (correct operator precedence).
+- **Apps**: logger_flush_now() before reboot from the Start Menu.
+
+### v1.0-beta3
 - **Core**: Fixed main loop 100% CPU load and cursor freeze by correcting `delta_ms` calculation after `sleep_until`.
 - **Core**: Added safe thermal reboot (100ms delay) to prevent SD card FAT corruption during watchdog reset.
 - **Core**: Added NULL pointer check for SD card during boot to prevent HardFault crashes.
