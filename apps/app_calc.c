@@ -60,48 +60,48 @@ static void calc_add_char(char c) {
     }
 }
 
+static const char *parse_s;
+
+static double parse_number(void) {
+    double res = 0;
+    while (*parse_s >= '0' && *parse_s <= '9') {
+        res = res * 10 + (*parse_s - '0');
+        parse_s++;
+    }
+    return res;
+}
+
+static double parse_term(void) {
+    double res = parse_number();
+    while (*parse_s == '*' || *parse_s == '/') {
+        char op = *parse_s++;
+        double rhs = parse_number();
+        if (op == '*') res *= rhs;
+        else {
+            if (rhs == 0) { state->has_error = true; return 0; }
+            res /= rhs;
+        }
+    }
+    return res;
+}
+
+static double parse_expr(void) {
+    double res = parse_term();
+    while (*parse_s == '+' || *parse_s == '-') {
+        char op = *parse_s++;
+        double rhs = parse_term();
+        if (op == '+') res += rhs;
+        else res -= rhs;
+    }
+    return res;
+}
+
+/* FIX: Recursive descent parser с приоритетом операций (* и / перед + и -) */
 static double calc_evaluate(void) {
-    char *s = state->expr_buf;
-    double total = 0;
-    double current = 0;
-    char op = '+';
-    bool has_num = false;
-
-    while (*s) {
-        if (*s >= '0' && *s <= '9') {
-            current = current * 10 + (*s - '0');
-            has_num = true;
-        } else if (*s == '+' || *s == '-' || *s == '*' || *s == '/') {
-            if (!has_num) return 0;
-            switch (op) {
-                case '+': total += current; break;
-                case '-': total -= current; break;
-                case '*': total *= current; break;
-                case '/':
-                    if (current == 0) { state->has_error = true; return 0; }
-                    total /= current;
-                    break;
-            }
-            op = *s;
-            current = 0;
-            has_num = false;
-        }
-        s++;
-    }
-
-    if (has_num) {
-        switch (op) {
-            case '+': total += current; break;
-            case '-': total -= current; break;
-            case '*': total *= current; break;
-            case '/':
-                if (current == 0) { state->has_error = true; return 0; }
-                total /= current;
-                break;
-        }
-    }
-
-    return total;
+    parse_s = state->expr_buf;
+    double res = parse_expr();
+    if (*parse_s != 0) state->has_error = true;
+    return res;
 }
 
 static void calc_press(int r, int c) {

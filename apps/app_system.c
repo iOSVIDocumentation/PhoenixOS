@@ -37,6 +37,7 @@ static void menu_tick(const core_input_t *in, uint32_t delta_ms) {
             core_open(APP_ABOUT, 0);
         } else {
             st7789_set_backlight(0);
+            logger_flush_now();
             watchdog_reboot(0, 0, 0);
         }
     }
